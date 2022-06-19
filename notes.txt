@@ -1,0 +1,17 @@
+//dyrektywa ngModel - przypisywanie wartości wpisanej w inpucie do atrybutu klasy
+//trzeba wrzucić import FormsModule w module komponentu
+
+.ts
+name = ""
+
+.html
+<input [(ngModel)]="name" >
+<p>{{name}}</p>
+
+// deklaracja, rozszerza coś o dodatkowe elementy
+
+@Component({
+  selector: 'app-server',
+  templateUrl: './server.component.html',
+  styleUrls: ['./server.component.scss']
+})
