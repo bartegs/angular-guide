@@ -31,3 +31,14 @@ Interpolacja stringów zadziała tylko raz, ale nie będzie dynamicznych zmian (
 5. Event binding - eventy przypisujemy w nawiasach okrągłych, bez "on": onClick="źle", (onclick)="dobrze"
   
   <button(click)="onCreateServer()">
+
+6. Passing data with event binding - poprzez użycie słowa kluczowego $event w parametrze metody obsługującej event,
+mamy dostep do danych wyemitowanych razem z tym eventem
+
+<input (input)="onUpdateServerName($event)" />
+
+  onUpdateServerName(event: Event) {
+    this.serverName = (<HTMLInputElement>event.target).value;
+  }
+
+  //32 finished
