@@ -1,5 +1,5 @@
-//dyrektywa ngModel - przypisywanie wartości wpisanej w inpucie do atrybutu klasy
-//trzeba wrzucić import FormsModule w module komponentu
+1. dyrektywa ngModel - przypisywanie wartości wpisanej w inpucie do atrybutu klasy
+trzeba wrzucić import FormsModule w module komponentu
 
 .ts
 name = ""
@@ -8,10 +8,26 @@ name = ""
 <input [(ngModel)]="name" >
 <p>{{name}}</p>
 
-// deklaracja, rozszerza coś o dodatkowe elementy
+2. deklaracja, rozszerza coś o dodatkowe elementy
 
 @Component({
   selector: 'app-server',
   templateUrl: './server.component.html',
   styleUrls: ['./server.component.scss']
 })
+
+3. String interpolation - wyrażenia, które na końcu
+printują string/konwersje na string, mogą to być jakieś pola klasy
+
+<div>{{ title }}</div>
+
+4.  property binding - nawiasy kwadratowe - sygnalizują dynamiczne bindowanie do domyślnych atrybutów elementu html
+
+<button [disabled]="!allowNewServers">
+
+Interpolacja stringów zadziała tylko raz, ale nie będzie dynamicznych zmian (poniżej)
+<button disabled="{{ !allowNewServers }}" >
+
+5. Event binding - eventy przypisujemy w nawiasach okrągłych, bez "on": onClick="źle", (onclick)="dobrze"
+  
+  <button(click)="onCreateServer()">
