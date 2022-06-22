@@ -5,12 +5,11 @@ import { FormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { ServerComponent } from './components/server/server.component';
 import { ServersComponent } from './components/servers/servers.component';
-import { WarningAlertComponent } from './components/warning-alert/warning-alert.component';
-import { SuccessAlertComponent } from './components/success-alert/success-alert.component';
-import { BindingAssignmentComponent } from './binding-assignment/binding-assignment.component';
+import { BindingAssignmentComponent } from './components/binding-assignment/binding-assignment.component';
+import { DirectiveAssignmentComponent } from './components/directive-assignment/directive-assignment.component';
 
 @NgModule({
-  declarations: [AppComponent, ServerComponent, ServersComponent, WarningAlertComponent, SuccessAlertComponent, BindingAssignmentComponent],
+  declarations: [AppComponent, ServerComponent, ServersComponent, BindingAssignmentComponent, DirectiveAssignmentComponent],
   imports: [BrowserModule, FormsModule],
   providers: [],
   bootstrap: [AppComponent],

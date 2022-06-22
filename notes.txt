@@ -59,3 +59,35 @@ Komponenty to dyrektywy z szablonem - nakazują stworzenie komponentu <app-compo
   <ng-template> #noServer>
     <p>No server. ng-template to wbudwany komponent/dyrektywa</p>
   </ng-template>
+
+11. ngStyle directive - dyrektywa atrybutu - nie dodaje/usuwa elementów DOM, modyfikuje tylko element na którym jest obecna
+sama dyrektywa pisana jest bez [], ale tu jest property binding
+Dodaje pojedyncze style na bazie jakiegoś warunku
+
+<p [ngStyle]="{backgroundColor: getColor()}">test</p>
+
+  getColor() {
+    return this.serverStatus === 'online' ? 'green' : 'red';
+  }
+
+[ngStyle] without method
+
+<p [ngStyle]="{ backgroundColor: serverStatus === 'online' ? 'green' : 'red' }">test</p>
+
+12. ngClass directive - dyrektywa atrybutu,
+Dodaje klasy na podstawie jakiegoś warunku
+
+<p [ngClass]="{online: serverStatus === 'online'}">test</p>
+Klasa bez kropki i bez cudzysłowia
+
+13. *ngFor directive - dyrektywa strukturalna, umożliwa loopowanie po tablicy, przypomina zastosowaniem map z reacta
+
+  servers: string[] = ['Testserver1', 'Testserver2'];
+  <app-server *ngFor="let server of servers">{{server}} - dostep do elementu tablicy z konkretnego wywołania</app-server>
+
+Można również wyciągnąc indeks danej iteracji
+
+  <p *ngFor="let click of clicks; let i = index">
+    {{ clicks[i] }}
+  </p>
+
