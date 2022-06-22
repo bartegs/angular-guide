@@ -41,4 +41,21 @@ mamy dostep do danych wyemitowanych razem z tym eventem
     this.serverName = (<HTMLInputElement>event.target).value;
   }
 
-  //32 finished
+7. Two way data binding - Działa w dwie strony, zmiana pola klasy zmienia wartość, event w inpucie zmienia pole
+<input type="text" [(ngModel)]="name" />
+
+Poniżej: Jednokierunkowe bindowanie - event zmieni zmienną, ale value inputa nie zmieni się gdy zmienimy w innym miejscu pole klasy
+<input (input)="onUpdateServerName($event)" />
+
+8. Directives - dyrektywy to instrukcje w DOM
+Komponenty to dyrektywy z szablonem - nakazują stworzenie komponentu <app-component> z szablonu
+
+9. *ngIf directive - dyrektywa *ngIf to coś w rodzaju if statement. Gwiazdka oznacza, że to dyrektywa strukturalna, czyli modyfikuje DOM.
+  <p *ngIf="serverCreated">{{ serverCreationStatus }}</p>
+
+10. *ngIf with else
+
+  <p *ngIf="serverCreated; else noServer">{{ serverCreationStatus }}</p>
+  <ng-template> #noServer>
+    <p>No server. ng-template to wbudwany komponent/dyrektywa</p>
+  </ng-template>
