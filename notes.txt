@@ -91,3 +91,82 @@ Można również wyciągnąc indeks danej iteracji
     {{ clicks[i] }}
   </p>
 
+14. Bingding to custom properties - passing data between components
+Aby przekazać dane z rodzica do dziecka, w html rodzica dodajemy bindowanie atrybutu, a w dziecku dodajemy @Input (wraz z importem)
+
+PARENT:
+  <app-server *ngFor="let server of servers" [server]="server"></app-server>
+
+CHILD:
+import z anuglar-core
+
+@Input() server: string = "";
+
+<p>
+  Server with ID {{server}}
+</p>
+
+15. Binding to custom properties with alias name in the outer component
+
+PARENT:
+  <app-server *ngFor="let server of servers" [SRV]="server"></app-server>
+
+CHILD:
+import z anuglar-core
+
+@Input('SRV') server: string = "";
+
+<p>
+  Server with ID {{server}}
+</p>
+
+16. Emiting custom events - w dziecku html reagujemy na normalny wbudowany event, w ts emitujemy nowy event
+w rodzicu reagujemy na customowy event poprzez kolejną metodę, w parametrze mamy dostęp do $eventu czyli danych z customowoego eventu
+
+PARENT:
+<app-cockpit
+  (serverCreated)="onServerAdded($event)"
+></app-cockpit>
+
+serverElements = [{type: 'server', name: 'TestServer', content: 'just a test'}]
+
+    onServerAdded(serverData: {serverName: string, serverContent: string}) {
+    this.serverElements.push({
+      type: 'server',
+      name: serverData.serverName,
+      content: serverData.serverContent,
+    });
+  }
+
+CHILD:
+<button class="btn btn-primary" (click)="onAddServer()">Add Server</button>
+
+import output z angular-core
+
+  newServerName: string = '';
+  newServerContent: string = '';
+
+  @Output() serverCreated = new EventEmitter<{
+    serverName: string;
+    serverContent: string;
+  }>();
+
+    onAddServer() {
+    this.serverCreated.emit({
+      serverName: this.newServerName,
+      serverContent: this.newServerContent,
+    });
+  }
+
+17. Emiting custom events with alias name in the outer component
+
+CHILD:
+  @Output('srvCreated') serverCreated = new EventEmitter<{
+    serverName: string;
+    serverContent: string;
+  }>();
+
+PARENT:
+  <app-cockpit
+    (srvCreated)="onServerAdded($event)"
+  ></app-cockpit>

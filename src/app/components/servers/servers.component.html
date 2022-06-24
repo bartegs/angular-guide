@@ -1,9 +1,5 @@
 <div>
-  <input
-    [(ngModel)]="serverName"
-    type="text"
-    class="form-control"
-  />
+  <input [(ngModel)]="serverName" type="text" class="form-control" />
   <button
     (click)="onCreateServer()"
     [disabled]="!allowNewServers"
@@ -12,6 +8,6 @@
     Add server
   </button>
   <p *ngIf="serverCreated">{{ serverCreationStatus }}</p>
-  <app-server *ngFor="let server of servers"></app-server>
-  {{servers}}
+  <app-server *ngFor="let server of servers" [server]="server"></app-server>
+  {{ servers }}
 </div>

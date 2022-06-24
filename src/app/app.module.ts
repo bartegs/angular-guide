@@ -7,9 +7,11 @@ import { ServerComponent } from './components/server/server.component';
 import { ServersComponent } from './components/servers/servers.component';
 import { BindingAssignmentComponent } from './components/binding-assignment/binding-assignment.component';
 import { DirectiveAssignmentComponent } from './components/directive-assignment/directive-assignment.component';
+import { CockpitComponent } from './components/cockpit/cockpit.component';
+import { ServerElementComponent } from './components/server-element/server-element.component';
 
 @NgModule({
-  declarations: [AppComponent, ServerComponent, ServersComponent, BindingAssignmentComponent, DirectiveAssignmentComponent],
+  declarations: [AppComponent, ServerComponent, ServersComponent, BindingAssignmentComponent, DirectiveAssignmentComponent, CockpitComponent, ServerElementComponent],
   imports: [BrowserModule, FormsModule],
   providers: [],
   bootstrap: [AppComponent],
