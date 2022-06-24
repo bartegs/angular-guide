@@ -170,3 +170,92 @@ PARENT:
   <app-cockpit
     (srvCreated)="onServerAdded($event)"
   ></app-cockpit>
+
+18. Local Reference - store te reference to the whole element(any) not only the value like for eg. ngModel
+Typ - element
+
+name: <input type="text" #serverRef>
+<button (click)="onAddServer(serverRef)">Add server</button>
+
+// no need for a value variable anymore
+onAddServer(nameInput: HTMLInputElement) {
+  console.log(nameInput.value)
+}
+
+19. Getting access to HTML elements via @ViewChild
+Typ - referencja
+
+name: <input type="text" #serverRef>
+
+import z angular core
+@ViewChild('#serverRef', {static: true}) serverContentInput: ElementRef;
+
+onAddServer(nameInput: HTMLInputElement) {
+  console.log(this.serverContentInput.nativeElement.value)
+}
+
+20. ng-content - dane pomiędzy znacznikami komponentu
+PARENT
+<app-server>
+  <h1>Hello</h1>
+</app-server>
+
+CHILD
+<div>
+<ng-content></ng-content>
+<h2>world</h2>
+</div>
+
+21. Lifecycle methods
+
+  constructor() {
+    console.log('constructor called');
+    //Called on new object initialization
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    console.log('ngOnChanges called');
+    //Called after a bound input property changes
+  }
+
+  ngOnInit(): void {
+    console.log('ngOnInit called');
+    //Called once the component is initialized
+  }
+
+  ngDoCheck(): void {
+    console.log('ngDoCheck called');
+    //Called during every change detection run
+  }
+
+  ngAfterContentInit(): void {
+    console.log('ngAfterContentInit called');
+    //Called after content (ng-content) has been projected into view
+  }
+
+  ngAfterContentChecked(): void {
+    console.log('ngAfterContentChecked called');
+    //Called every time the projected content has been checked
+  }
+
+  ngAfterViewInit(): void {
+    console.log('ngAfterViewInit called');
+    //Called after the component’s view (and child views) has been initialized
+  }
+
+  ngAfterViewChecked(): void {
+    console.log('ngAfterViewChecked called');
+    //Called every time the view (and child views) have been checked
+  }
+
+  ngOnDestroy(): void {
+    console.log('ngOnDestroy called');
+    //Called once the component is about to be destroyed
+  }
+
+22. Getting access to HTML elements via @ContentChild (elements that are passed to another component, therefore not directly in view - but in content)
+@ContentChild('#serverRef', {static: true}) serverContentInput: ElementRef;
+
+<app-cockpit>
+  name: <input type="text" #serverRef> //this is (<ng-content)
+</app-cockpit>
