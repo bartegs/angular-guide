@@ -24,3 +24,10 @@
     >
   </div>
 </div>
+<br /><br /><br />
+<app-game-control (intervalFired)="onIntervalFired($event)"></app-game-control>
+<app-odd *ngFor="let oddNumber of oddNumbers" [oddNumber]="oddNumber"></app-odd>
+<app-even
+  *ngFor="let evenNumber of evenNumbers"
+  [evenNumber]="evenNumber"
+></app-even>
