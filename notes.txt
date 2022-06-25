@@ -259,3 +259,93 @@ CHILD
 <app-cockpit>
   name: <input type="text" #serverRef> //this is (<ng-content)
 </app-cockpit>
+
+23. Custom attribute directive - better to use renderer, not just the element reference - not manipulate DOM directly
+private attribute in the constructor adds the property to the class
+
+ng g d
+
+import { Directive, ElementRef, OnInit, Renderer2 } from '@angular/core';
+
+@Directive({
+  selector: '[appBetterHighlight]',
+})
+export class BetterHighlightDirective implements OnInit {
+  constructor(private elRef: ElementRef, private renderer: Renderer2) {}
+
+  ngOnInit() {
+    this.renderer.setStyle(
+      this.elRef.nativeElement,
+      'background-color',
+      'silver'
+    );
+  }
+}
+
+<p appBetterHighlight>Paragraph styled with custom directive (renderer)</p>'
+
+24. using HostListener to listen to events that occur on the host of directive
+
+  @HostListener('mouseenter') mouseover(eventData: Event) {
+    this.renderer.setStyle(
+      this.elRef.nativeElement,
+      'background-color',
+      'silver'
+    );
+  }
+
+25. using HostBinding to bint to properties of the host element that we are using in the directive
+
+  @HostBinding('style.backgroundColor') backgroundColor: string = 'transparent';
+
+  @HostListener('mouseenter') mouseover(eventData: Event) {
+    this.backgroundColor = 'silver';
+  }
+
+26. Binding to directive properties
+
+A)
+@Input() highlightColor: string = 'gold';
+<p appBetterHighlight [highlightColor]="'red'">
+  Paragraph styled with custom directive (renderer, hostbinding)
+</p>
+
+B) - only when passing string
+@Input() highlightColor: string = 'gold';
+<p appBetterHighlight highlightColor="red">
+  Paragraph styled with custom directive (renderer, hostbinding)
+</p>
+
+C) - using alias
+@Input('appBetterHighlight') highlightColor: string = 'transparent';
+<p [appBetterHighlight]="red">
+  Paragraph styled with custom directive (renderer, hostbinding)
+</p>
+
+27. Custom structural directive
+
+  @Input() set appUnless(condition: boolean) {
+    if (!condition) {
+      this.vcRef.createEmbeddedView(this.templateRef);
+    } else {
+      this.vcRef.clear();
+    }
+  }
+  constructor(
+    private templateRef: TemplateRef<any>,
+    private vcRef: ViewContainerRef
+  ) {}
+
+<p *appUnless="false">
+  Paragraph made with custom structural directive
+</p>
+
+28. ngSwitch built in directive
+value = 10;
+
+<div [ngSwitch]="value">
+  <p *ngSwitchCase="5">value is 5</p>
+  <p *ngSwitchCase="10">value is 10</p>
+  <p *ngSwitchDefault>value is default</p>
+</div>
+
