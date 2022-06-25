@@ -349,3 +349,50 @@ value = 10;
   <p *ngSwitchDefault>value is default</p>
 </div>
 
+29. Creating a service
+
+@Injectable({providedIn: 'root'})
+
+export class LoggingService {
+  logStatusChange(status: string) {
+    console.log('A server status changed, new status: ' + status);
+  }
+}
+
+
+
+  constructor(private loggingService: LoggingService) {}
+
+  onSetTo(status: string) {
+    this.loggingService.logStatusChange(status);
+  }
+
+30. Import service into service
+
+below is a body of accounts service
+
+  constructor(private loggingService: LoggingService) {}
+
+  addAccount(name: string, status: string) {
+    this.accounts.push({ name: name, status: status });
+    this.loggingService.logStatusChange(status);
+  }
+
+31. Cross component communication using service 
+-(service below)
+
+  statusUpdated = new EventEmitter<string>();
+
+-(component account)
+
+  onSetTo(status: string) {
+    this.accountsService.statusUpdated.emit(status);
+  }
+
+-(component new account)
+
+  constructor(private accountsService: AccountsService) {
+    this.accountsService.statusUpdated.subscribe((status: string) =>
+      alert('New status: ' + status)
+    );
+  }
