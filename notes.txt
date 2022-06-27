@@ -396,3 +396,81 @@ below is a body of accounts service
       alert('New status: ' + status)
     );
   }
+
+32. Routing
+
+  app-module
+
+const appRoutes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'users', component: UsersComponent },
+  { path: 'servers', component: ServersComponent }
+];
+
+@NgModule({
+
+  imports: [BrowserModule, FormsModule, RouterModule.forRoot(appRoutes)],
+
+})
+
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <router-outlet></router-outlet>
+    </div>
+
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="/servers">Servers</a></li>
+        <li><a routerLink="/users">Users</a></li>
+
+/servers - with slash, it points to the root route
+servers - without slash, its's relative to the current route
+
+33. Routing with active route
+
+        <li
+          role="presentation"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a routerLink="/">Home</a>
+        </li>
+        <li role="presentation" routerLinkActive="active">
+          <a routerLink="/servers">Servers</a>
+        </li>
+        <li role="presentation" routerLinkActive="active">
+          <a routerLink="/users">Users</a>
+        </li>
+
+exact-this exact route - otherwise, its active all the time, because all other paths start with a "/"
+
+33. Trigger route change in code with router.navigate
+
+  constructor(private router: Router) {}
+
+  onLoadServers() {
+    this.router.navigate(['/servers']);
+  }
+
+34. router.navigate with relative path
+router.navigate is not aware of the current route like routerLink is, so we need to add ActivatedRoute to achieve this
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+    onReload() {
+    this.router.navigate(['servers'], { relativeTo: this.route });
+  }
+
+35. Routes with params
+
+const appRoutes: Routes = [
+  { path: 'users', component: UsersComponent },
+  { path: 'users/:id', component: UserComponent },
+];
+
+
+
+
+
+
