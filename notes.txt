@@ -469,8 +469,26 @@ const appRoutes: Routes = [
   { path: 'users/:id', component: UserComponent },
 ];
 
+36. Routes with child routes
 
+const appRoutes: Routes = [
+  { path: '', component: HomeComponent },
+  {
+    path: 'users',
+    component: UsersComponent,
+    children: [{ path: ':id/:name', component: UserComponent }],
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+    children: [
+      { path: ':id', component: ServerComponent },
+      { path: ':id/edit', component: EditServerComponent },
+    ],
+  },
+];
 
+we also need another <router-outlet> in the servers and users components
 
 
 
