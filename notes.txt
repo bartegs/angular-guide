@@ -490,5 +490,11 @@ const appRoutes: Routes = [
 
 we also need another <router-outlet> in the servers and users components
 
+37. Redirect to route and catch unknown routes
 
+  { path: 'not-found', component: PageNotFoundComponent },
+  { path: '**', redirectTo: '/not-found' },
 
+  ** path should be the last one in the file
+
+// TO FINISH ROUTING PARTS - 150, 151, 152, 153
