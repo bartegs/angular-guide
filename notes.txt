@@ -498,3 +498,125 @@ we also need another <router-outlet> in the servers and users components
   ** path should be the last one in the file
 
 // TO FINISH ROUTING PARTS - 150, 151, 152, 153
+
+38. Observables
+
+observable - jakies dane które mogą się zmieniać,
+można się do nich subskrybować
+
+w przypadku własnych customowych observable, trzeba zrobić unsubscribe
+wbudowane mają to domyślnie
+
+  private firstObsSubscription!: Subscription;
+  constructor() {}
+
+  ngOnInit() {
+    this.firstObsSubscription = interval(1000).subscribe((count) => {
+      console.log(count);
+    });
+  }
+
+  ngOnDestroy() {
+    this.firstObsSubscription.unsubscribe();
+  }
+
+39. Custom observable with error and completion
+
+  ngOnInit() {
+    // this.firstObsSubscription = interval(1000).subscribe((count) => {
+    //   console.log(count);
+    // });
+    const customObservable = new Observable((observer: Observer<any>) => {
+      let count = 0;
+      setInterval(() => {
+        observer.next(count);
+        if (count === 2) {
+          observer.complete();
+        }
+        if (count > 3) {
+          observer.error(new Error('count is too big'));
+        }
+        count++;
+      }, 1000);
+    });
+
+    this.secondObsSubscription = customObservable.subscribe(
+      (data) => {
+        console.log(data);
+      },
+      (error) => {
+        alert(error.message);
+      }, () => {
+        console.log('completed')
+      }
+    );
+  }
+
+  ngOnDestroy() {
+    this.secondObsSubscription.unsubscribe();
+  }
+
+40.  Using RXJS operators, operators allow us to modify the data we get fromt he observable
+
+We need to add .pipe(), which allows us to use operators like map or/and filter
+
+    const customObservable = new Observable((observer: Observer<any>) => {
+      let count = 0;
+      setInterval(() => {
+        observer.next(count);
+        if (count === 5) {
+          observer.complete();
+        }
+        if (count > 10) {
+          observer.error(new Error('count is too big'));
+        }
+        count++;
+      }, 1000);
+    });
+
+    this.secondObsSubscription = customObservable
+      .pipe(
+        filter((data) => {
+          return data > 0;
+        }),
+        map((data) => {
+          return 'Round: ' + (data);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          console.log(data);
+        },
+        error: (error) => {
+          alert(error.message);
+        },
+        complete: () => {
+          console.log('completed');
+        },
+      });
+  }
+
+  ngOnDestroy() {
+    this.secondObsSubscription.unsubscribe();
+  }
+
+  41. RXJS Subject
+
+  Subject is something we can subscribe to, we can call next on it, we can use it as an event emitter
+
+  USER COMPONENT:
+
+    onActivate() {
+    this.userService.activatedEmitter.next(true);
+    }
+
+  USER SERVICE:
+
+      activatedEmitter = new Subject<boolean>();
+
+  APP COMPONENT:
+
+        ngOnInit() {
+          this.userService.activatedEmitter.subscribe(
+          (didActivate) => (this.userActivated = didActivate)
+        );

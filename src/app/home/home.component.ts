@@ -1,29 +1,58 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { AuthService } from '../auth.service';
+import { Component, OnDestroy, OnInit } from '@angular/core';
+import { filter, map, Observable, Observer, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-home',
   templateUrl: './home.component.html',
   styleUrls: ['./home.component.css'],
 })
-export class HomeComponent implements OnInit {
-  constructor(private router: Router, private authService: AuthService) {}
+export class HomeComponent implements OnInit, OnDestroy {
+  private firstObsSubscription!: Subscription;
+  private secondObsSubscription!: Subscription;
 
-  ngOnInit() {}
+  constructor() {}
 
-  onLoadServer(id: number) {
-    this.router.navigate(['/servers', id, 'edit'], {
-      queryParams: { allowEdit: '1' },
-      fragment: 'loading',
+  ngOnInit() {
+    // this.firstObsSubscription = interval(1000).subscribe((count) => {
+    //   console.log(count);
+    // });
+    const customObservable = new Observable((observer: Observer<any>) => {
+      let count = 0;
+      setInterval(() => {
+        observer.next(count);
+        if (count === 5) {
+          observer.complete();
+        }
+        if (count > 10) {
+          observer.error(new Error('count is too big'));
+        }
+        count++;
+      }, 1000);
     });
+
+    this.secondObsSubscription = customObservable
+      .pipe(
+        filter((data) => {
+          return data > 0;
+        }),
+        map((data) => {
+          return 'Round: ' + (data);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          console.log(data);
+        },
+        error: (error) => {
+          alert(error.message);
+        },
+        complete: () => {
+          console.log('completed');
+        },
+      });
   }
 
-  onLogin() {
-    this.authService.login()
-  }
-
-  onLogout() {
-    this.authService.logout()
+  ngOnDestroy() {
+    this.secondObsSubscription.unsubscribe();
   }
 }
