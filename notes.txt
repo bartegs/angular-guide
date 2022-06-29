@@ -621,7 +621,7 @@ We need to add .pipe(), which allows us to use operators like map or/and filter
           (didActivate) => (this.userActivated = didActivate)
         );
 
-42. FORMS - Template Driven Forms
+42. TEMPLATE FORMS
 
 input fields need a name property, and a ngModel, so that angular registries them
 
@@ -843,3 +843,39 @@ The other approach would be to set it to specific values with setValue() and pro
     this.myForm.reset();
   }
 
+
+53. REACTIVE FORMS  - setup
+we need to import ReactiveFormsModule in app.module
+
+then, we assing FormGroup to a class property
+signupForm!: FormGroup;
+
+
+
+54. Creating a basic form
+
+  signupForm!: FormGroup;
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      'name': new FormControl(null),
+      'mail': new FormControl(null),
+      'gender': new FormControl('male'),
+    });
+  }
+
+  <form [formGroup]="signupForm">
+    <input
+      formControlName="name"
+    />
+    <input
+      formControlName="mail"
+    />
+     <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input formControlName="gender" type="radio" [value]="gender" />{{
+              gender
+            }}
+          </label>
+        </div>
+  </form>
