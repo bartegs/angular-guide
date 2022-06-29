@@ -1,18 +1,121 @@
 <div class="container">
   <div class="row">
     <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
-      <a routerLink="/">Home</a> |
-      <a [routerLink]="['user', 1]"> User 1 </a>
-      |
-      <a [routerLink]="['user', 2]"> User 2 </a>
+      <form #f="ngForm" (ngSubmit)="onSubmit()">
+        <div id="user-data">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input
+              ngModel
+              name="username"
+              type="text"
+              id="username"
+              class="form-control"
+              required
+            />
+          </div>
+          <button
+            class="btn btn-default"
+            (click)="suggestUserName()"
+            type="button"
+          >
+            Suggest an Username
+          </button>
+          <div class="form-group">
+            <label for="email">Mail</label>
+            <input
+              ngModel
+              name="email"
+              type="email"
+              id="email"
+              class="form-control"
+              email
+              required
+              #email="ngModel"
+            />
+          </div>
+          <p *ngIf="!email.valid && email.touched">
+            Please enter a valid email adress - eg. name@domain.com
+          </p>
+        </div>
+        <div class="form-group">
+          <label for="secret">Secret Questions</label>
+          <select
+            [ngModel]="defaultPet"
+            name="secret"
+            id="secret"
+            class="form-control"
+          >
+            <option value="pet">Your first Pet?</option>
+            <option value="teacher">Your first teacher?</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <textarea
+            class="form-control"
+            [(ngModel)]="answer"
+            name="questionAnswer"
+            rows="3"
+            #textAnswer="ngModel"
+          ></textarea>
+        </div>
+        <p *ngIf="textAnswer.touched && textAnswer.value !== ''">
+          Your reply: {{ answer }}
+        </p>
+        <div ngModelGroup="loginData" #loginData="ngModelGroup">
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              ngModel
+              name="password"
+              type="password"
+              id="password"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="login">Login</label>
+            <input
+              ngModel
+              name="login"
+              type="email"
+              id="login"
+              class="form-control"
+              required
+            />
+          </div>
+          <p *ngIf="!loginData.valid && loginData.touched">
+            Login data is not valid!
+          </p>
+        </div>
+        <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input
+              type="radio"
+              name="gender"
+              [ngModel]="'male'"
+              [value]="gender"
+              required
+            />
+            {{ gender }}
+          </label>
+        </div>
+        <button class="btn btn-primary" [disabled]="!f.valid" type="submit">
+          Submit
+        </button>
+      </form>
     </div>
   </div>
   <hr />
-  <p *ngIf="userActivated">Activated!</p>
-  <hr />
-  <div class="row">
-    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
-      <router-outlet></router-outlet>
+  <div class="div row" *ngIf="user.submitted">
+    <div class="col-xs-12">
+      <h3>Your Data</h3>
+      <p>Username: {{ user.username }}</p>
+      <p>Mail: {{ user.mail }}</p>
+      <p>Secret Question: {{ user.secretQuestion }}</p>
+      <p>Answer: {{ user.secretAnswer }}</p>
+      <p>Gender: {{ user.gender }}</p>
     </div>
   </div>
 </div>
