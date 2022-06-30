@@ -1036,3 +1036,61 @@ forbiddenEmail(control: FormControl | any): Promise<any> | Observable<any> {
     })
 
     this.signupForm.reset() --------- its also possible to pass an object to reset(), to reset to specific values (for eg. leave the value of default radio)
+
+65. Using HTTP
+
+the first step is to import HttpClientModule into app.module
+
+then, we need to asign the module to a class propety using the constructor
+
+  constructor(private http: HttpClient) {}
+
+66. POST request - this.http.post(url, requestBody) - and then we need to .subscribe(),
+because without it the request wont be executed
+
+  onCreatePost(postData: { title: string; content: string }) {
+    this.http
+      .post(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        postData
+      )
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+  }
+
+67. GET request - needs subscribe() aswell
+
+  private fetchPosts() {
+    this.http
+      .get(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .subscribe((posts) => {
+        console.log(posts);
+      });
+  }
+
+  
+  ngOnInit() {
+    this.fetchPosts();
+  }
+
+68. Use RXJS opertaor map(), to transform the data. Transofrming the object into array.
+
+      .pipe(
+        map((responseData) => {
+
+          const postsArray = [];
+          const responseObject: { [index: string]: any } = responseData;
+          
+          for (const key in responseObject) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseObject[key], id: key });
+            }
+          }
+
+          return postsArray;
+        })
+      )
+
