@@ -1,6 +1,12 @@
-<button class="btn btn-primary" (click)="switchToTemplate()">TEMPLATE FORM</button>
-<button class="btn btn-danger" (click)="switchToReactive()">REACTIVE FORM</button>
-<br><br>
+<button class="btn btn-primary" (click)="switchToTemplate()">
+  TEMPLATE FORM
+</button>
+<button class="btn btn-danger" (click)="switchToReactive()">
+  REACTIVE FORM
+</button>
+<button class="btn" (click)="switchToAssignment()">ASSIGNMENT FORM</button>
+
+<br /><br />
 <app-template-form *ngIf="isTemplateActive"></app-template-form>
 <app-reactive-form *ngIf="isReactiveActive"></app-reactive-form>
-
+<app-assignment-form *ngIf="isAssignmentActive"></app-assignment-form>

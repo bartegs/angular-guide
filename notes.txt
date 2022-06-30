@@ -879,3 +879,160 @@ signupForm!: FormGroup;
           </label>
         </div>
   </form>
+
+
+55. Submit the reactive form - very siiliar, ngSubmit aswell, but the benefit of this is that we don't need to access te reference to the submitted form,
+because we already have it definied in ts file
+
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+
+  
+  signupForm!: FormGroup;
+
+  onSubmit() {
+    console.log(this.signupForm);
+  }
+
+56. Reactive validation
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      name: new FormControl(null, Validators.required),
+      mail: new FormControl(null, [Validators.required, Validators.email]),
+    });
+  }
+
+57. Reactive validation - display a message
+
+? - typescript thing
+
+    <span
+      *ngIf="
+        !signupForm.get('mail')?.valid && signupForm.get('mail')?.touched
+      "
+      class="help-block"
+      >Please enter a valid email!</span
+    >
+
+58. Grouping form controls
+
+We add another form group here
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      userDetails: new FormGroup({
+        name: new FormControl(null, Validators.required),
+        mail: new FormControl(null, [Validators.required, Validators.email]),
+      }),
+      gender: new FormControl('male'),
+    });
+  }
+
+  And then add formGroupName directive to the element, that gathers the items we want to group
+  Then, we also need to correct the paths in the .get() method
+
+  <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <div formGroupName="userDetails">
+            <input
+              formControlName="name"
+            />
+            <span
+              *ngIf="
+                !signupForm.get('userDetails.name')?.valid &&
+                signupForm.get('userDetails.name')?.touched
+              "
+              >Please enter a valid username!</span
+            >
+
+59. Add an array of controls - add fields dynamically
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      hobbies: new FormArray([]),
+    });
+  }
+
+  onAddHobby() {
+    const control = new FormControl(null, Validators.required);
+
+    (<FormArray>this.signupForm.get('hobbies')).push(control);
+  }
+
+  getControls() {
+    return (<FormArray>this.signupForm.get('hobbies')).controls;
+  }
+
+        <div formArrayName="hobbies">
+          <h4>Your Hobbies</h4>
+          <button type="button" (click)="onAddHobby()">Add Hobby</button>
+          <div *ngFor="let hobbyControl of getControls(); let i = index">
+            <input type="text" class="form-control" [formControlName]="i"/>
+          </div>
+        </div>
+
+60. Custom validator
+
+ name: new FormControl(null, [Validators.required, this.forbiddenNames.bind(this)]),
+
+ 
+  forbiddenNames(control: FormControl): { [s: string]: boolean } | null {
+    if (this.forbiddenUsernames.indexOf(control.value) !== -1) {
+      return { nameIsForbidden: true };
+    }
+    return null;
+  }
+
+61. Acessing error codes from the controls, to display the appropriate error message
+
+  <span *ngIf="signupForm.get('userDetails.name')?.errors?.['nameIsForbidden']">This name is just wrong ;)</span>
+  <span *ngIf="signupForm.get('userDetails.name')?.errors?.['required']">This field is required, please type your username.</span>
+
+62. Asynchronous validators
+
+        mail: new FormControl(null, {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: this.forbiddenEmail,
+        }),
+
+
+forbiddenEmail(control: FormControl | any): Promise<any> | Observable<any> {
+    const promise = new Promise<any>((resolve, reject) => {
+      setTimeout(() => {
+        if (control.value === 'test@test.com') {
+          resolve({ emailIsForbidden: true });
+        } else {
+          resolve(null);
+        }
+      }, 1500);
+    });
+    return promise;
+  }
+
+63. Reacting to status or value changes
+
+    this.signupForm.valueChanges.subscribe((value) => {
+      console.log(value);
+    });
+
+    this.signupForm.statusChanges.subscribe((value) => {
+      console.log(value);
+    });
+
+64. SetValues of the form programatically, patchValue, and reset in REACTIVE FORMS
+
+    this.signupForm.setValue({
+      userDetails: {
+        name: 'bs',
+        mail: 'sd',
+      },
+      gender: 'male',
+      hobbies: [],
+    });
+
+    this.signupForm.patchValue({
+      userDetails: {
+            name: 'bartek',
+          },
+    })
+
+    this.signupForm.reset() --------- its also possible to pass an object to reset(), to reset to specific values (for eg. leave the value of default radio)

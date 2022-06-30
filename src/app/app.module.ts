@@ -5,9 +5,15 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { AppComponent } from './app.component';
 import { TemplateFormComponent } from './template-form/template-form.component';
 import { ReactiveFormComponent } from './reactive-form/reactive-form.component';
+import { AssignmentFormComponent } from './assignment-form/assignment-form.component';
 
 @NgModule({
-  declarations: [AppComponent, TemplateFormComponent, ReactiveFormComponent],
+  declarations: [
+    AppComponent,
+    TemplateFormComponent,
+    ReactiveFormComponent,
+    AssignmentFormComponent,
+  ],
   imports: [BrowserModule, FormsModule, ReactiveFormsModule],
   providers: [],
   bootstrap: [AppComponent],
