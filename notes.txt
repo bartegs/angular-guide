@@ -1083,7 +1083,7 @@ because without it the request wont be executed
 
           const postsArray = [];
           const responseObject: { [index: string]: any } = responseData;
-          
+
           for (const key in responseObject) {
             if (responseData.hasOwnProperty(key)) {
               postsArray.push({ ...responseObject[key], id: key });
@@ -1094,3 +1094,188 @@ because without it the request wont be executed
         })
       )
 
+69. Adding types to request methods - <return type in angled brackets after the name of the method>
+
+export interface Post {
+  title: string;
+  content: string;
+  id?: string;
+}
+
+
+.get<{ [key: string]: Post }>(
+  'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+)
+
+70. Displaying data from api
+
+this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      )
+      .subscribe((posts) => {
+        this.loadedPosts = posts;
+      });
+
+
+
+      <p *ngIf="loadedPosts.length < 1">No posts available!</p>
+      <ul *ngIf="loadedPosts.length >= 1">
+        <li *ngFor="let post of loadedPosts">
+          <h1>{{ post.title }}</h1>
+          <p>{{ post.content }}</p>
+        </li>
+      </ul>
+
+71. Showing loading paragraph when fetching is not compeletd
+
+  isFetching = false;
+
+  private fetchPosts() {
+    this.isFetching = true;
+    this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      )
+      .subscribe((posts) => {
+        this.loadedPosts = posts;
+        this.isFetching = false;
+      });
+  }
+
+      <p *ngIf="loadedPosts.length < 1">No posts available!</p>
+      <ul *ngIf="loadedPosts.length >= 1">
+        <li *ngFor="let post of loadedPosts">
+          <h1>{{ post.title }}</h1>
+          <p>{{ post.content }}</p>
+        </li>
+      </ul>
+
+      <p *ngIf="isFetching">Loading...</p>
+
+72. Request methods in a service, instead of the component body
+
+to get access to isFetching and loadedPosts, in service we dont call subscribe(), instead return the Observable,
+and in the appropriate file chain the .subscribe() method
+
+If you dont care about the response, you can leave the subscribe() method inside service
+
+SERVICE:
+
+fetchPosts() {
+    return this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData: any) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      );
+  }
+
+COMPONENT THAT EXECUTES THE REQUEST:
+
+  onFetchPosts() {
+    this.isFetching = true;
+    this.postsService.fetchPosts().subscribe((posts) => {
+      this.isFetching = false;
+      this.loadedPosts = posts;
+    });
+  }
+
+73. DELETE request
+
+SERVICE:
+
+  removePosts() {
+    return this.http.delete(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+    );
+  }
+
+COMPONENT THAT EXECUTES THE REQUEST:
+
+    onClearPosts() {
+    this.postsService.removePosts().subscribe(() => {
+      this.loadedPosts = [];
+    });
+    this.onFetchPosts();
+  }
+
+74. Handling errors in http requests
+
+onFetchPosts() {
+    this.isFetching = true;
+    this.postsService.fetchPosts().subscribe(
+      (posts) => {
+        this.isFetching = false;
+        this.loadedPosts = posts;
+      },
+      (error) => {
+        this.error = error.message;
+      }
+    );
+  }
+
+75. Handling errors with subjects - maybe when hadnling errors, where subscription is not called in the component itself
+
+    SERVICE:
+
+    error = new Subject<string>()
+
+    this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData
+    )
+    .subscribe(responseData => {
+      console.log(responseData)
+    }, error => {
+      this.error.next(error.message)
+    });
+
+    COMPONENT:
+
+    error = null;
+    private errorSub: Subscription;
+
+    ngOnInit() {
+      this.postService.error.subscribe(errorMessage => {
+        this.error = errorMessage;
+      })
+    }
+
+    ngOnDestroy() {
+      this.errorSub.unsubscribe()
+    }
