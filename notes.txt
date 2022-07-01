@@ -349,3 +349,1144 @@ value = 10;
   <p *ngSwitchDefault>value is default</p>
 </div>
 
+29. Creating a service
+
+@Injectable({providedIn: 'root'})
+
+export class LoggingService {
+  logStatusChange(status: string) {
+    console.log('A server status changed, new status: ' + status);
+  }
+}
+
+
+
+  constructor(private loggingService: LoggingService) {}
+
+  onSetTo(status: string) {
+    this.loggingService.logStatusChange(status);
+  }
+
+30. Import service into service
+
+below is a body of accounts service
+
+  constructor(private loggingService: LoggingService) {}
+
+  addAccount(name: string, status: string) {
+    this.accounts.push({ name: name, status: status });
+    this.loggingService.logStatusChange(status);
+  }
+
+31. Cross component communication using service 
+-(service below)
+
+  statusUpdated = new EventEmitter<string>();
+
+-(component account)
+
+  onSetTo(status: string) {
+    this.accountsService.statusUpdated.emit(status);
+  }
+
+-(component new account)
+
+  constructor(private accountsService: AccountsService) {
+    this.accountsService.statusUpdated.subscribe((status: string) =>
+      alert('New status: ' + status)
+    );
+  }
+
+32. Routing
+
+  app-module
+
+const appRoutes: Routes = [
+  { path: '', component: HomeComponent },
+  { path: 'users', component: UsersComponent },
+  { path: 'servers', component: ServersComponent }
+];
+
+@NgModule({
+
+  imports: [BrowserModule, FormsModule, RouterModule.forRoot(appRoutes)],
+
+})
+
+    <div class="col-xs-12 col-sm-10 col-md-8 col-sm-offset-1 col-md-offset-2">
+      <router-outlet></router-outlet>
+    </div>
+
+        <li><a routerLink="/">Home</a></li>
+        <li><a routerLink="/servers">Servers</a></li>
+        <li><a routerLink="/users">Users</a></li>
+
+/servers - with slash, it points to the root route
+servers - without slash, its's relative to the current route
+
+33. Routing with active route
+
+        <li
+          role="presentation"
+          routerLinkActive="active"
+          [routerLinkActiveOptions]="{ exact: true }"
+        >
+          <a routerLink="/">Home</a>
+        </li>
+        <li role="presentation" routerLinkActive="active">
+          <a routerLink="/servers">Servers</a>
+        </li>
+        <li role="presentation" routerLinkActive="active">
+          <a routerLink="/users">Users</a>
+        </li>
+
+exact-this exact route - otherwise, its active all the time, because all other paths start with a "/"
+
+33. Trigger route change in code with router.navigate
+
+  constructor(private router: Router) {}
+
+  onLoadServers() {
+    this.router.navigate(['/servers']);
+  }
+
+34. router.navigate with relative path
+router.navigate is not aware of the current route like routerLink is, so we need to add ActivatedRoute to achieve this
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute
+  ) {}
+
+    onReload() {
+    this.router.navigate(['servers'], { relativeTo: this.route });
+  }
+
+35. Routes with params
+
+const appRoutes: Routes = [
+  { path: 'users', component: UsersComponent },
+  { path: 'users/:id', component: UserComponent },
+];
+
+36. Routes with child routes
+
+const appRoutes: Routes = [
+  { path: '', component: HomeComponent },
+  {
+    path: 'users',
+    component: UsersComponent,
+    children: [{ path: ':id/:name', component: UserComponent }],
+  },
+  {
+    path: 'servers',
+    component: ServersComponent,
+    children: [
+      { path: ':id', component: ServerComponent },
+      { path: ':id/edit', component: EditServerComponent },
+    ],
+  },
+];
+
+we also need another <router-outlet> in the servers and users components
+
+37. Redirect to route and catch unknown routes
+
+  { path: 'not-found', component: PageNotFoundComponent },
+  { path: '**', redirectTo: '/not-found' },
+
+  ** path should be the last one in the file
+
+// TO FINISH ROUTING PARTS - 150, 151, 152, 153
+
+38. Observables
+
+observable - jakies dane które mogą się zmieniać,
+można się do nich subskrybować
+
+w przypadku własnych customowych observable, trzeba zrobić unsubscribe
+wbudowane mają to domyślnie
+
+  private firstObsSubscription!: Subscription;
+  constructor() {}
+
+  ngOnInit() {
+    this.firstObsSubscription = interval(1000).subscribe((count) => {
+      console.log(count);
+    });
+  }
+
+  ngOnDestroy() {
+    this.firstObsSubscription.unsubscribe();
+  }
+
+39. Custom observable with error and completion
+
+  ngOnInit() {
+    // this.firstObsSubscription = interval(1000).subscribe((count) => {
+    //   console.log(count);
+    // });
+    const customObservable = new Observable((observer: Observer<any>) => {
+      let count = 0;
+      setInterval(() => {
+        observer.next(count);
+        if (count === 2) {
+          observer.complete();
+        }
+        if (count > 3) {
+          observer.error(new Error('count is too big'));
+        }
+        count++;
+      }, 1000);
+    });
+
+    this.secondObsSubscription = customObservable.subscribe(
+      (data) => {
+        console.log(data);
+      },
+      (error) => {
+        alert(error.message);
+      }, () => {
+        console.log('completed')
+      }
+    );
+  }
+
+  ngOnDestroy() {
+    this.secondObsSubscription.unsubscribe();
+  }
+
+40.  Using RXJS operators, operators allow us to modify the data we get fromt he observable
+
+We need to add .pipe(), which allows us to use operators like map or/and filter
+
+    const customObservable = new Observable((observer: Observer<any>) => {
+      let count = 0;
+      setInterval(() => {
+        observer.next(count);
+        if (count === 5) {
+          observer.complete();
+        }
+        if (count > 10) {
+          observer.error(new Error('count is too big'));
+        }
+        count++;
+      }, 1000);
+    });
+
+    this.secondObsSubscription = customObservable
+      .pipe(
+        filter((data) => {
+          return data > 0;
+        }),
+        map((data) => {
+          return 'Round: ' + (data);
+        })
+      )
+      .subscribe({
+        next: (data) => {
+          console.log(data);
+        },
+        error: (error) => {
+          alert(error.message);
+        },
+        complete: () => {
+          console.log('completed');
+        },
+      });
+  }
+
+  ngOnDestroy() {
+    this.secondObsSubscription.unsubscribe();
+  }
+
+  41. RXJS Subject
+
+  Subject is something we can subscribe to, we can call next on it, we can use it as an event emitter
+
+  USER COMPONENT:
+
+    onActivate() {
+    this.userService.activatedEmitter.next(true);
+    }
+
+  USER SERVICE:
+
+      activatedEmitter = new Subject<boolean>();
+
+  APP COMPONENT:
+
+        ngOnInit() {
+          this.userService.activatedEmitter.subscribe(
+          (didActivate) => (this.userActivated = didActivate)
+        );
+
+42. TEMPLATE FORMS
+
+input fields need a name property, and a ngModel, so that angular registries them
+
+            <input
+              ngModel
+              name="username"
+              type="text"
+              id="username"
+              class="form-control"
+            />
+
+Form needs a reference to the object that angular creates, which is then assed to the onSubmit method
+      
+      <form #f="ngForm" (ngSubmit)="onSubmit(f)">
+
+        onSubmit(form: NgForm) {
+          console.log(form);
+        }
+
+43. accesing the form object with ViewChild
+
+The benfit of this aproach is that we can use the form object before the onSubmit method is called - good for validation
+
+      <form #f="ngForm" (ngSubmit)="onSubmit()">
+
+        @ViewChild('f') form!: NgForm;
+
+        onSubmit() {
+          console.log(this.form);
+        }
+
+44. Simple validation - required, email
+With template forms we need to add directives that are validators
+
+            <input
+              ngModel
+              name="username"
+              type="text"
+              id="username"
+              class="form-control"
+              required
+            />
+          </div>
+         
+            <input
+              ngModel
+              name="email"
+              type="email"
+              id="email"
+              class="form-control"
+              email
+            />
+
+              onSubmit() {
+                console.log(this.form.valid);
+              }
+
+Additionally, you might also want to enable HTML5 validation (by default, Angular disables it).
+ You can do so by adding the ngNativeValidate  to a control in your template.
+
+45. Displaying an validation message
+
+we add an local reference, which points to the ngModel (and that is that exact one item of the whole form object with its properties)
+            <input
+              ngModel
+              name="email"
+              type="email"
+              id="email"
+              class="form-control"
+              email
+              required
+              #email="ngModel"
+            />
+
+          <p *ngIf="!email.valid && email.touched">
+            Please enter a valid email adress - eg. name@domain.com
+          </p>
+
+46. Default value - [one way binding] - we need to property bind ngModel to the class property, that has a default value attached to it
+
+defaultPet = 'pet';
+
+<select [ngModel]="defaultPet" name="secret" id="secret" class="form-control">
+  <option value="pet">Your first Pet?</option>
+  <option value="teacher">Your first teacher?</option>
+</select>
+
+47. [(Two way binding)] ngModel to have a default value, and display it if it changes
+
+  answer = '';
+
+     <textarea
+       class="form-control"
+       [(ngModel)]="answer"
+       name="questionAnswer"
+       rows="3"
+     ></textarea>
+      <p>Your reply: {{ answer }}</p>
+
+48. Grouping form controls - we might want to use that to group some parts of the data, for eg user data, login data etc
+We then have those inputs grouped in the object that angular creates, by the name we specify
+
+We might want to add a reference to that group, so we can have the acces to the ts object, and display error messsages
+
+1. HERE WE ADD A GROUP TO GROUP IT INSIDE THE OBJECT       
+        <div ngModelGroup="loginData" 
+
+2. HERE WE ADD A LOCAL REFERENCE, SO WE CAN ACCES THAT OBJECT           
+        #loginData="ngModelGroup">
+
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input
+              ngModel
+              name="password"
+              type="password"
+              id="password"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="login">Login</label>
+            <input
+              ngModel
+              name="login"
+              type="email"
+              id="login"
+              class="form-control"
+              required
+            />
+          </div>
+
+          2.1 WE ACCESS THE OBJECT HERE          
+          <p *ngIf="!loginData.valid && loginData.touched">
+
+            Login data is not valid!
+          </p>
+        </div>
+
+49. Radio buttons (with default) - we loop through the array of given data
+
+  genders = ['male', 'female'];
+
+
+        <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input
+              type="radio"
+              name="gender"
+              [ngModel]="'male'"   ---- normal would be just ngModel, the syntax on the left is for default
+              [value]="gender"
+              required
+            />
+            {{ gender }}
+          </label>
+        </div>
+
+50. Changing the data programatically, for eg. inject a suggested username
+set whole form with setValue, change only selected values with patchValue
+
+
+  @ViewChild('f') myForm!: NgForm;
+
+  suggestUserName() {
+    const suggestedName = 'Superuser';
+
+    // REPLACE WHOLE OBJECT
+    // this.myForm.setValue({
+    //   userData: {
+    //     username: suggestedName,
+    //     email: '',
+    //   },
+    //   secret: 'pet',
+    // });
+
+    // REPLACE ONLY SELECTED VALUES
+    this.myForm.form.patchValue({
+      username: suggestedName,
+    });
+  }
+
+51. Display the data gathered by the form
+
+  user = {
+    username: '',
+    mail: '',
+    secretQuestion: '',
+    secretAnswer: '',
+    gender: '',
+    submitted: false,
+  };
+
+  onSubmit() {
+    this.user = {
+      username: this.myForm.value.username,
+      mail: this.myForm.value.email,
+      secretQuestion: this.myForm.value.secret,
+      secretAnswer: this.myForm.value.questionAnswer,
+      gender: this.myForm.value.gender,
+      submitted: true
+    };
+  }
+  <div *ngIf="user.submitted">
+      <h3>Your Data</h3>
+      <p>Username: {{ user.username }}</p>
+      <p>Mail: {{ user.mail }}</p>
+      <p>Secret Question: {{ user.secretQuestion }}</p>
+      <p>Answer: {{ user.secretAnswer }}</p>
+      <p>Gender: {{ user.gender }}</p>
+  </div>
+
+52. Resetting forms - just use reset() method on the form viewchild.
+The other approach would be to set it to specific values with setValue() and providing the whole object
+
+  @ViewChild('f') myForm!: NgForm;
+
+  onSubmit() {
+    this.myForm.reset();
+  }
+
+
+53. REACTIVE FORMS  - setup
+we need to import ReactiveFormsModule in app.module
+
+then, we assing FormGroup to a class property
+signupForm!: FormGroup;
+
+
+
+54. Creating a basic form
+
+  signupForm!: FormGroup;
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      'name': new FormControl(null),
+      'mail': new FormControl(null),
+      'gender': new FormControl('male'),
+    });
+  }
+
+  <form [formGroup]="signupForm">
+    <input
+      formControlName="name"
+    />
+    <input
+      formControlName="mail"
+    />
+     <div class="radio" *ngFor="let gender of genders">
+          <label>
+            <input formControlName="gender" type="radio" [value]="gender" />{{
+              gender
+            }}
+          </label>
+        </div>
+  </form>
+
+
+55. Submit the reactive form - very siiliar, ngSubmit aswell, but the benefit of this is that we don't need to access te reference to the submitted form,
+because we already have it definied in ts file
+
+<form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+
+  
+  signupForm!: FormGroup;
+
+  onSubmit() {
+    console.log(this.signupForm);
+  }
+
+56. Reactive validation
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      name: new FormControl(null, Validators.required),
+      mail: new FormControl(null, [Validators.required, Validators.email]),
+    });
+  }
+
+57. Reactive validation - display a message
+
+? - typescript thing
+
+    <span
+      *ngIf="
+        !signupForm.get('mail')?.valid && signupForm.get('mail')?.touched
+      "
+      class="help-block"
+      >Please enter a valid email!</span
+    >
+
+58. Grouping form controls
+
+We add another form group here
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      userDetails: new FormGroup({
+        name: new FormControl(null, Validators.required),
+        mail: new FormControl(null, [Validators.required, Validators.email]),
+      }),
+      gender: new FormControl('male'),
+    });
+  }
+
+  And then add formGroupName directive to the element, that gathers the items we want to group
+  Then, we also need to correct the paths in the .get() method
+
+  <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+        <div formGroupName="userDetails">
+            <input
+              formControlName="name"
+            />
+            <span
+              *ngIf="
+                !signupForm.get('userDetails.name')?.valid &&
+                signupForm.get('userDetails.name')?.touched
+              "
+              >Please enter a valid username!</span
+            >
+
+59. Add an array of controls - add fields dynamically
+
+  ngOnInit(): void {
+    this.signupForm = new FormGroup({
+      hobbies: new FormArray([]),
+    });
+  }
+
+  onAddHobby() {
+    const control = new FormControl(null, Validators.required);
+
+    (<FormArray>this.signupForm.get('hobbies')).push(control);
+  }
+
+  getControls() {
+    return (<FormArray>this.signupForm.get('hobbies')).controls;
+  }
+
+        <div formArrayName="hobbies">
+          <h4>Your Hobbies</h4>
+          <button type="button" (click)="onAddHobby()">Add Hobby</button>
+          <div *ngFor="let hobbyControl of getControls(); let i = index">
+            <input type="text" class="form-control" [formControlName]="i"/>
+          </div>
+        </div>
+
+60. Custom validator
+
+ name: new FormControl(null, [Validators.required, this.forbiddenNames.bind(this)]),
+
+ 
+  forbiddenNames(control: FormControl): { [s: string]: boolean } | null {
+    if (this.forbiddenUsernames.indexOf(control.value) !== -1) {
+      return { nameIsForbidden: true };
+    }
+    return null;
+  }
+
+61. Acessing error codes from the controls, to display the appropriate error message
+
+  <span *ngIf="signupForm.get('userDetails.name')?.errors?.['nameIsForbidden']">This name is just wrong ;)</span>
+  <span *ngIf="signupForm.get('userDetails.name')?.errors?.['required']">This field is required, please type your username.</span>
+
+62. Asynchronous validators
+
+        mail: new FormControl(null, {
+          validators: [Validators.required, Validators.email],
+          asyncValidators: this.forbiddenEmail,
+        }),
+
+
+forbiddenEmail(control: FormControl | any): Promise<any> | Observable<any> {
+    const promise = new Promise<any>((resolve, reject) => {
+      setTimeout(() => {
+        if (control.value === 'test@test.com') {
+          resolve({ emailIsForbidden: true });
+        } else {
+          resolve(null);
+        }
+      }, 1500);
+    });
+    return promise;
+  }
+
+63. Reacting to status or value changes
+
+    this.signupForm.valueChanges.subscribe((value) => {
+      console.log(value);
+    });
+
+    this.signupForm.statusChanges.subscribe((value) => {
+      console.log(value);
+    });
+
+64. SetValues of the form programatically, patchValue, and reset in REACTIVE FORMS
+
+    this.signupForm.setValue({
+      userDetails: {
+        name: 'bs',
+        mail: 'sd',
+      },
+      gender: 'male',
+      hobbies: [],
+    });
+
+    this.signupForm.patchValue({
+      userDetails: {
+            name: 'bartek',
+          },
+    })
+
+    this.signupForm.reset() --------- its also possible to pass an object to reset(), to reset to specific values (for eg. leave the value of default radio)
+
+65. Using HTTP
+
+the first step is to import HttpClientModule into app.module
+
+then, we need to asign the module to a class propety using the constructor
+
+  constructor(private http: HttpClient) {}
+
+66. POST request - this.http.post(url, requestBody) - and then we need to .subscribe(),
+because without it the request wont be executed
+
+  onCreatePost(postData: { title: string; content: string }) {
+    this.http
+      .post(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        postData
+      )
+      .subscribe((responseData) => {
+        console.log(responseData);
+      });
+  }
+
+67. GET request - needs subscribe() aswell
+
+  private fetchPosts() {
+    this.http
+      .get(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .subscribe((posts) => {
+        console.log(posts);
+      });
+  }
+
+  
+  ngOnInit() {
+    this.fetchPosts();
+  }
+
+68. Use RXJS opertaor map(), to transform the data. Transofrming the object into array.
+
+      .pipe(
+        map((responseData) => {
+
+          const postsArray = [];
+          const responseObject: { [index: string]: any } = responseData;
+
+          for (const key in responseObject) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseObject[key], id: key });
+            }
+          }
+
+          return postsArray;
+        })
+      )
+
+69. Adding types to request methods - <return type in angled brackets after the name of the method>
+
+export interface Post {
+  title: string;
+  content: string;
+  id?: string;
+}
+
+
+.get<{ [key: string]: Post }>(
+  'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+)
+
+70. Displaying data from api
+
+this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      )
+      .subscribe((posts) => {
+        this.loadedPosts = posts;
+      });
+
+
+
+      <p *ngIf="loadedPosts.length < 1">No posts available!</p>
+      <ul *ngIf="loadedPosts.length >= 1">
+        <li *ngFor="let post of loadedPosts">
+          <h1>{{ post.title }}</h1>
+          <p>{{ post.content }}</p>
+        </li>
+      </ul>
+
+71. Showing loading paragraph when fetching is not compeletd
+
+  isFetching = false;
+
+  private fetchPosts() {
+    this.isFetching = true;
+    this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      )
+      .subscribe((posts) => {
+        this.loadedPosts = posts;
+        this.isFetching = false;
+      });
+  }
+
+      <p *ngIf="loadedPosts.length < 1">No posts available!</p>
+      <ul *ngIf="loadedPosts.length >= 1">
+        <li *ngFor="let post of loadedPosts">
+          <h1>{{ post.title }}</h1>
+          <p>{{ post.content }}</p>
+        </li>
+      </ul>
+
+      <p *ngIf="isFetching">Loading...</p>
+
+72. Request methods in a service, instead of the component body
+
+to get access to isFetching and loadedPosts, in service we dont call subscribe(), instead return the Observable,
+and in the appropriate file chain the .subscribe() method
+
+If you dont care about the response, you can leave the subscribe() method inside service
+
+SERVICE:
+
+fetchPosts() {
+    return this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData: any) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        })
+      );
+  }
+
+COMPONENT THAT EXECUTES THE REQUEST:
+
+  onFetchPosts() {
+    this.isFetching = true;
+    this.postsService.fetchPosts().subscribe((posts) => {
+      this.isFetching = false;
+      this.loadedPosts = posts;
+    });
+  }
+
+73. DELETE request
+
+SERVICE:
+
+  removePosts() {
+    return this.http.delete(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+    );
+  }
+
+COMPONENT THAT EXECUTES THE REQUEST:
+
+    onClearPosts() {
+    this.postsService.removePosts().subscribe(() => {
+      this.loadedPosts = [];
+    });
+    this.onFetchPosts();
+  }
+
+74. Handling errors in http requests
+
+onFetchPosts() {
+    this.isFetching = true;
+    this.postsService.fetchPosts().subscribe(
+      (posts) => {
+        this.isFetching = false;
+        this.loadedPosts = posts;
+      },
+      (error) => {
+        this.error = error.message;
+      }
+    );
+  }
+
+75. Handling errors with subjects - maybe when hadnling errors, where subscription is not called in the component itself
+
+    SERVICE:
+
+    error = new Subject<string>()
+
+    this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData
+    )
+    .subscribe(responseData => {
+      console.log(responseData)
+    }, error => {
+      this.error.next(error.message)
+    });
+
+    COMPONENT:
+
+    error = null;
+    private errorSub: Subscription;
+
+    ngOnInit() {
+      this.postService.error.subscribe(errorMessage => {
+        this.error = errorMessage;
+      })
+    }
+
+    ngOnDestroy() {
+      this.errorSub.unsubscribe()
+    }
+
+76. catchError Operator - to send error data somewhere, not really for UI
+
+fetchPosts() {
+    return this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData: any) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        }),
+        catchError((errorRes) => {
+          // send to analytics server
+          return throwError(() => new Error(errorRes) );
+        })
+      );
+  }
+
+
+77. Improve UI with errors
+
+Ok button to remove error message,
+turn off isFetching when error uccurs
+
+
+78. Headers in http requests
+config object which contains headers is the last argument in the request
+
+ return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+      }
+    );
+
+
+78. Query prams in http requests
+
+    return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+        params: new HttpParams().set('print', 'pretty'),
+      }
+    );
+
+79. Get the whole response (with status etc), not just the body
+        observe: 'response',
+
+            return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+        params: new HttpParams().set('print', 'pretty'),
+        observe: 'response',
+      }
+    );
+
+77. request event - more data about request status
+
+removePosts() {
+    return this.http
+      .delete(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        {
+          observe: 'events',
+        }
+      )
+      .pipe(
+        tap((event: any) => {
+          console.log(event);
+          if (event.type === HttpEventType.Sent) {
+            // ...
+          }
+          if (event.type === HttpEventType.Response) {
+            console.log(event.body);
+          }
+        })
+      );
+  }
+
+78. Response type - default is json
+
+    this.http
+      .delete(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        {
+          responseType: 'json',
+        }
+      )
+79. Interceptors - they run before the request leaves the app, and let it leave the app afterwards
+By default, they run on all requests, to specfiy the url, we add it in the body
+
+// INTERCEPTOR
+
+import { HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+
+export class AuthInterceptorService implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler ) {
+        // if (req.url)
+    console.log('Request is on its way')
+    return next.handle(req)
+  }
+}
+
+// APP MODULE
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, FormsModule, HttpClientModule],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true,
+    },
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+
+80. Manipulate request in the interceptor
+
+  intercept(req: HttpRequest<any>, next: HttpHandler ) {
+    console.log('Request is on its way')
+    
+    // if (req.url)
+    const modifiedRequest = req.clone({headers: req.headers.append('Auth', 'xyz')})
+    return next.handle(modifiedRequest)
+  }
+
+81. Manipulate request in the interceptor
+
+intercept(req: HttpRequest<any>, next: HttpHandler) {
+    console.log('Request is on its way');
+
+    // if (req.url)
+    const modifiedRequest = req.clone({
+      headers: req.headers.append('Auth', 'xyz'),
+    });
+    return next.handle(modifiedRequest).pipe(
+      tap((event) => {
+        console.log(event);
+        if (event.type === HttpEventType.Response) {
+          console.log('Response arrivec, body data: ');
+          console.log(event.body);
+        }
+      })
+    );
+  }
+
+82. Multiple interceptors
+
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, FormsModule, HttpClientModule],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoggingInterceptorService,
+      multi: true,
+    },
+  ],
+  bootstrap: [AppComponent],
+})
+
+
+
+import {
+  HttpEventType,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+} from '@angular/common/http';
+
+import { tap } from 'rxjs';
+
+export class LoggingInterceptorService implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler) {
+    console.log('Outgoing request', req.url);
+    return next.handle(req).pipe(
+      tap((event) => {
+        if (event.type === HttpEventType.Response) {
+          console.log('Incoming response', event.body);
+        }
+      })
+    );
+  }
+}
