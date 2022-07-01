@@ -1,6 +1,11 @@
-import { HttpClient } from '@angular/common/http';
+import {
+  HttpClient,
+  HttpEventType,
+  HttpHeaders,
+  HttpParams,
+} from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { map, Subject } from 'rxjs';
+import { catchError, map, Subject, throwError, tap } from 'rxjs';
 import { Post } from './post.model';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +19,14 @@ export class PostsService {
 
     return this.http.post<{ name: string }>(
       'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
-      postData
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+        params: new HttpParams().set('print', 'pretty'),
+        observe: 'response',
+      }
     );
   }
 
@@ -33,13 +45,33 @@ export class PostsService {
             }
           }
           return postsArray;
+        }),
+        catchError((errorRes) => {
+          // send to analytics server
+          return throwError(() => new Error(errorRes));
         })
       );
   }
 
   removePosts() {
-    return this.http.delete(
-      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
-    );
+    return this.http
+      .delete(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        {
+          observe: 'events',
+          responseType: 'json',
+        }
+      )
+      .pipe(
+        tap((event: any) => {
+          console.log(event);
+          if (event.type === HttpEventType.Sent) {
+            // ...
+          }
+          if (event.type === HttpEventType.Response) {
+            console.log(event.body);
+          }
+        })
+      );
   }
 }

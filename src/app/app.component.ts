@@ -36,7 +36,9 @@ export class AppComponent implements OnInit {
         this.loadedPosts = posts;
       },
       (error) => {
+        console.log(error)
         this.error = error.message;
+        this.isFetching = false;
       }
     );
   }
@@ -46,5 +48,9 @@ export class AppComponent implements OnInit {
       this.loadedPosts = [];
     });
     this.onFetchPosts();
+  }
+
+  onUnderstandError() {
+    this.error = null;
   }
 }

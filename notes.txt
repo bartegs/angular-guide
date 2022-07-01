@@ -1279,3 +1279,214 @@ onFetchPosts() {
     ngOnDestroy() {
       this.errorSub.unsubscribe()
     }
+
+76. catchError Operator - to send error data somewhere, not really for UI
+
+fetchPosts() {
+    return this.http
+      .get<{ [key: string]: Post }>(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json'
+      )
+      .pipe(
+        map((responseData: any) => {
+          const postsArray: Post[] = [];
+
+          for (const key in responseData) {
+            if (responseData.hasOwnProperty(key)) {
+              postsArray.push({ ...responseData[key], id: key });
+            }
+          }
+          return postsArray;
+        }),
+        catchError((errorRes) => {
+          // send to analytics server
+          return throwError(() => new Error(errorRes) );
+        })
+      );
+  }
+
+
+77. Improve UI with errors
+
+Ok button to remove error message,
+turn off isFetching when error uccurs
+
+
+78. Headers in http requests
+config object which contains headers is the last argument in the request
+
+ return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+      }
+    );
+
+
+78. Query prams in http requests
+
+    return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+        params: new HttpParams().set('print', 'pretty'),
+      }
+    );
+
+79. Get the whole response (with status etc), not just the body
+        observe: 'response',
+
+            return this.http.post<{ name: string }>(
+      'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+      postData,
+      {
+        headers: new HttpHeaders({
+          'Custom-Header': 'hello',
+        }),
+        params: new HttpParams().set('print', 'pretty'),
+        observe: 'response',
+      }
+    );
+
+77. request event - more data about request status
+
+removePosts() {
+    return this.http
+      .delete(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        {
+          observe: 'events',
+        }
+      )
+      .pipe(
+        tap((event: any) => {
+          console.log(event);
+          if (event.type === HttpEventType.Sent) {
+            // ...
+          }
+          if (event.type === HttpEventType.Response) {
+            console.log(event.body);
+          }
+        })
+      );
+  }
+
+78. Response type - default is json
+
+    this.http
+      .delete(
+        'https://angular-guide-16de1-default-rtdb.europe-west1.firebasedatabase.app/posts.json',
+        {
+          responseType: 'json',
+        }
+      )
+79. Interceptors - they run before the request leaves the app, and let it leave the app afterwards
+By default, they run on all requests, to specfiy the url, we add it in the body
+
+// INTERCEPTOR
+
+import { HttpHandler, HttpInterceptor, HttpRequest } from "@angular/common/http";
+
+export class AuthInterceptorService implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler ) {
+        // if (req.url)
+    console.log('Request is on its way')
+    return next.handle(req)
+  }
+}
+
+// APP MODULE
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, FormsModule, HttpClientModule],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true,
+    },
+  ],
+  bootstrap: [AppComponent],
+})
+export class AppModule {}
+
+80. Manipulate request in the interceptor
+
+  intercept(req: HttpRequest<any>, next: HttpHandler ) {
+    console.log('Request is on its way')
+    
+    // if (req.url)
+    const modifiedRequest = req.clone({headers: req.headers.append('Auth', 'xyz')})
+    return next.handle(modifiedRequest)
+  }
+
+81. Manipulate request in the interceptor
+
+intercept(req: HttpRequest<any>, next: HttpHandler) {
+    console.log('Request is on its way');
+
+    // if (req.url)
+    const modifiedRequest = req.clone({
+      headers: req.headers.append('Auth', 'xyz'),
+    });
+    return next.handle(modifiedRequest).pipe(
+      tap((event) => {
+        console.log(event);
+        if (event.type === HttpEventType.Response) {
+          console.log('Response arrivec, body data: ');
+          console.log(event.body);
+        }
+      })
+    );
+  }
+
+82. Multiple interceptors
+
+
+@NgModule({
+  declarations: [AppComponent],
+  imports: [BrowserModule, FormsModule, HttpClientModule],
+  providers: [
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true,
+    },
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: LoggingInterceptorService,
+      multi: true,
+    },
+  ],
+  bootstrap: [AppComponent],
+})
+
+
+
+import {
+  HttpEventType,
+  HttpHandler,
+  HttpInterceptor,
+  HttpRequest,
+} from '@angular/common/http';
+
+import { tap } from 'rxjs';
+
+export class LoggingInterceptorService implements HttpInterceptor {
+  intercept(req: HttpRequest<any>, next: HttpHandler) {
+    console.log('Outgoing request', req.url);
+    return next.handle(req).pipe(
+      tap((event) => {
+        if (event.type === HttpEventType.Response) {
+          console.log('Incoming response', event.body);
+        }
+      })
+    );
+  }
+}
