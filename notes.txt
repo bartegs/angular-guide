@@ -1,3 +1,16 @@
+To sum up, ng-content is used to display children in a template, ng-container is used as a non-rendered container to avoid having to add a span or a div, and ng-template allows you to group some content that is not rendered directly but can be used in other places of your template or your code.
+
+Members order:
+@Inputs
+@Outputs
+public fields
+private fields
+constructor
+getters
+lifecycle hooks
+public methods
+private methods
+
 1. dyrektywa ngModel - przypisywanie wartości wpisanej w inpucie do atrybutu klasy
 trzeba wrzucić import FormsModule w module komponentu
 
@@ -469,6 +482,24 @@ const appRoutes: Routes = [
   { path: 'users/:id', component: UserComponent },
 ];
 
+constructor(private route: ActivatedRoute) {}
+
+ngOnInit() {
+   this.user = {
+      id: this.route.snapshot.params['id']
+   }
+}
+
+<a [routerLink]="['/users', 5]"></a>
+
+JEŚLI URL MOŻE SIĘ ZMIENIĆ BEZ PRZEŁADOWANIA KOMPONENTU
+
+ngOnInit() {
+  this.rooute.params.subscribe(
+     ( params: Params ) => { this.user.id = params.['id'] }
+  )
+}
+
 36. Routes with child routes
 
 const appRoutes: Routes = [
@@ -497,7 +528,163 @@ we also need another <router-outlet> in the servers and users components
 
   ** path should be the last one in the file
 
-// TO FINISH ROUTING PARTS - 150, 151, 152, 153
+37.1 Query Params
+
+<a 
+   [routerLink]="['/users', 5]"
+   [queryParams]="{ allowEdit: '1' }"
+   fragment="loading"
+></a>
+
+lub
+
+constructor (private router: Router) {}
+
+onLoadServer(id: number) {
+   this.router.navigate(['/servers', id], {queryParams: { allowEdit: '1' }}, fragment: 'loading')
+
+   // zachowanie params po zmianie:
+
+   this.router.navigate(['edit'], {queryParamsHandling: 'preserve')
+}
+
+37.2 Retrieve QueryParams
+
+constructor (private route: ActivatedRoute) {}
+
+ngOnInit() {
+   console.log(this.route.snapshot.queryParams);
+   console.log(this.route.snapshot.fragment);
+
+   // Above - tylko jeśli url sie nie zmieni z wnętrza aktualnie              // wyświetlanego komponentu
+   
+   // Below - jeśli url może sie zmieniać gdy komponent jest już wyrenderowany
+   this.route.queryParams.subscribe()
+   this.route.fragment.subscribe()
+}
+
+{ path: '', redirectTo: '/home', pathMatch: 'full' }
+
+37.3 Outsource Routing
+
+app-routing-module.ts
+
+const appRoutes: Routes = {
+   {path: ''. component: HomeComponent },
+   ...
+}
+
+@NgModule({
+   imports: [
+      RouterModule.forRoot(appRoutes)
+   ],
+   exports: [
+      RouterModule
+   ]
+})
+
+app.module.ts
+
+@NgModule({
+   imports: [
+      ...,
+      AppRoutingModule
+   ]
+})
+
+37.4 Guardy
+
+auth-guard.service.ts
+
+CanActivate - ma zastosowanie dla route'a i jego child route'ów
+CanActivateChild - ma zastosowanie dla child route'ów (bez route'a)
+
+export class AuthGuard implements CanActivate {
+   canActivate(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+      return this.authService.isAuthenticated()
+         .then(
+         (authenticated: boolean) => {
+            if (authenticated) {return true}
+            else {this.router.navigate(['/'])}        
+         })
+     }
+   }
+
+{path: '/servers', canActivate: [AuthGuard] component: HomeComponent }
+
+dodać te serwisy (guard) do providers w app.module
+
+
+37.5 CanDeactivate guard - ostrzeżenie przy próbie zmiany route'a
+
+CanDeactivate guard - ostrzeżenie przy próbie zmiany route'a
+
+can-deactivate-guard.service.ts
+
+export interface CanComponentDeactivate {
+   canDeactivate: () => Observable<boolean> | Promise<boolean> | boolean;
+}
+
+export class CanDeactivateGuard implements CanDeactivate<CanComponentDeactivate> {
+   canDeactivate(component: CanComponentDeactivate, currentRoute: ActivatedRouteSnapshot, currentState: RouterStateSnapshot, nextState?: RouterStateSnapshot): Observable<boolean> | Promise<boolean> | boolean {
+      return component.canDeactivate();   
+   }
+}
+
+{path: '/servers', canDeactivateActivate: [CanDeactivateGuard] component: HomeComponent} 
+
+// dodać do providers
+
+edit-server.component.ts
+
+implements: CanComponentDeactivate
+
+allowEdit = false;
+changesSaved = false;
+
+canDeactivate(): Observable<boolean> | Promise<boolean> | boolean {
+   if (!this.allowEdit) {return true}
+   if (this.serverName !== this.server.name && !this.changesSaved {return confirm('Do you want to discard changes?'} else {return true}
+}
+
+37.6 Passing static data to route:
+
+routing module:
+{path: '/not-found', component: ErrorPageComponent, data: {message: 'Page not found'} } 
+
+ErrorPageComponent:
+
+constructor(private route: ActivatedRoute) {}
+
+ngOnInit() {
+// this.errorMessage = this.route.snapsht.data['message']
+   this.route.data.subscribe(
+      (data: Data) => {this.errorMessage = data['message']}
+   )
+}
+
+37.7 Passing dynamic data to route - route will load after data is resolved
+
+routing module:
+{path: '/not-found', component: ErrorPageComponent, resolve: {server: ServerResolver} } 
+
+interface Server {id: number, name: string}
+
+@Injectable()
+export class ServerResolver implements Resolve<Server> {
+   constructor(private route: ActivatedRoute) {}
+   
+   resolve(route: ActivatedRouteSnapshot, state: RouterStateSnapshot): Observable<Server> | Promise<Server> | Server {
+      return this.serversService.getServer(+route.prams['id'])
+   }
+
+}
+
+ngOnInit() {
+   this.route.data.subscribe(
+      (data: Data) => {this.server = data['server']}
+   )
+}
 
 38. Observables
 
@@ -1037,6 +1224,28 @@ forbiddenEmail(control: FormControl | any): Promise<any> | Observable<any> {
 
     this.signupForm.reset() --------- its also possible to pass an object to reset(), to reset to specific values (for eg. leave the value of default radio)
 
+64.1 FormBuilder
+
+    this.contactForm = this.formBuilder.group({
+      firstname: ['', [Validators.required, Validators.minLength(10)]],
+      lastname: ['', [Validators.required, Validators.maxLength(15), Validators.pattern("^[a-zA-Z]+$")]],
+      email: ['', [Validators.required, Validators.email]],
+      gender: ['', [Validators.required]],
+      isMarried: ['', [Validators.required]],
+      country: ['', [Validators.required]],
+      address: this.formBuilder.group({
+        city: ['', [Validators.required]],
+        street: ['', [Validators.required]],
+        pincode: ['', [Validators.required]],
+      })
+    });
+  }
+ 
+ 
+  get firstname() {
+    return this.contactForm.get('firstname');
+  }
+
 65. Using HTTP
 
 the first step is to import HttpClientModule into app.module
@@ -1490,3 +1699,21 @@ export class LoggingInterceptorService implements HttpInterceptor {
     );
   }
 }
+
+83. Custom Pipe with parameter (:parameter)
+
+@Pipie({name: 'shorten'})
+
+export class ShortenPipe implements PipeTransofrm {
+  transform(value: any, limit: number) {
+    if (value.length > limit) {
+      return value.substr(0, limit) + '...';
+    } else {
+      return value;
+    }
+  }
+}
+
+{{ test.name | shorten:5 }}
+
+add to declarations in module
