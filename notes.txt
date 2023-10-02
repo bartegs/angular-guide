@@ -1702,7 +1702,7 @@ export class LoggingInterceptorService implements HttpInterceptor {
 
 83. Custom Pipe with parameter (:parameter)
 
-@Pipie({name: 'shorten'})
+@Pipe({name: 'shorten'})
 
 export class ShortenPipe implements PipeTransofrm {
   transform(value: any, limit: number) {
@@ -1717,3 +1717,47 @@ export class ShortenPipe implements PipeTransofrm {
 {{ test.name | shorten:5 }}
 
 add to declarations in module
+
+84. JWT Auth
+Signup request
+
+auth.service.ts
+
+interface Response {...}
+@Injectable({providedIn: 'root'})
+export class AuthService {
+  constructor(private http: HttpClient) {}
+
+  signup(email, password)<Response> {
+    return (this.http.post('url', {email, password})
+  }
+
+component:
+
+this.isLoading = true;
+this.authService.signup(email, password).subscribe((res) => {this.isLoading = false}, err => {console.log(err), this.isLoading=false})
+
+Lub error w operatorze
+
+private handleErrorMethod(err: HttpErrorResponse) {}
+
+signup(email, password)<Response> {
+  return (this.http.post('url', {email, password}).pipe(CatchError(this.handleErrorMethod))
+}
+
+85. Save login response data
+  user = new Subject<User>();
+
+  private handleAuthentication(email, id, token) {
+  const user = new User(email, id, token)
+  this.user.next(user)
+}
+
+return this.http.post('url', {email, password})
+  .pipe(
+    catchError(this.handleErrorMethod),
+    tap(resData => {this.handleAuthentication(resData})
+  )
+
+301 - todo
+
