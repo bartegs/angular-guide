@@ -1759,5 +1759,67 @@ return this.http.post('url', {email, password})
     tap(resData => {this.handleAuthentication(resData})
   )
 
-301 - todo
+86 - reflect auth state in ui
+ngOnInit() {
+  this.userSub: Subscription = this.authService.user.subscribe(user=>{
+    this.isAuthenticated = !!user
+  }
+}
+
+87 - Add token to request
+user = new BehaviourSubject<User>(null)
+- BehaviourSubject 
+- dostaje wartość na start 
+- wtedy kolejny subskrybent ma dostęp do ostatnio zapisanej wartośći, nawet przed tym jak się sam zasubował
+
+fetchRecipes() {
+  this.authService.user.pipe(
+    take(1), // zasubuj, weź wartość (1), unsub
+    exhaustMap(user=>{
+      return this.http.get<Recipe[]>('url')
+      user.token -> auth header or queryParam
+    }) // zaczekaj na poprzednią wartość i użyj jej dalej, wewnątrz zwróć observable, które zastąpi cały ciąg observabli - pójdzie na samą górę - jakby pierwsza do której sub
+  )
+}
+
+88 - Add token via interceptor
+
+auth-interceptor.service.ts
+
+@Injectable()
+export class AuthInterceptorService implements HttpInterceptor {
+  constructor (private authService: AuthService) {}
+
+  intercept(req: HttpRequest<any>, next: HttpHandler) {
+    return this.authService.user.pipe(
+      take(1)
+      exhaustMap(user=>{
+        if (!user) {
+          return next.handle(req)
+        // interceptor jest dodawany do każdego requesta, nawet do loginu który dopiero zwróci usera.
+        // dlatego jeśli usera nie ma, to zwracamy oryginalny request
+        // można też uwzględniać/wykluczać url
+        }
+
+        const modifiedReq = req.clone({params: new HttpParams().set('auth', user.token) })
+        return next.handle(modifiedReq)
+      })
+    )
+  }
+}
+
+app.module
+
+proviuders: [..., {provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true}]
+
+89. Logout
+
+auth.service.ts
+logout() {
+  this.user.next(null)
+  this.router.navigate(['/auth'])
+}
+
+component:
+this.authService.logout()
 
