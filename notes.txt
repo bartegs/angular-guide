@@ -1823,3 +1823,137 @@ logout() {
 component:
 this.authService.logout()
 
+90. Auto Log In - local storage
+
+localStorage.setItem('userData', JSON.stringify(user))
+
+autoLogin() {
+  const userData = JSON.parse(localStorage.getItem('userData'))
+  if (!userData) {return;}
+  
+  const loadedUser = new User(userData.email...)
+  
+  if (loadedUser.token) {this.user.next(loadedUser};
+}
+
+ngOnInit() {
+  this.authService.autoLogin();
+}
+
+91 - auto-logout
+auth.service.ts
+
+logout() {
+  this.user.next(null}
+  this.router.navigate(['/auth']);
+  localStorage.removeItem('userData');
+
+  if(this.tokenExpirationTimer) {
+    clearTimeout(this.tokenExpirationTimer)
+  }
+}
+
+autoLogout(expirationDuration) {
+  this.tokenExpirationTimer = setTimeout(()={
+    this.logout();
+   expirationDuration)}
+}
+
+handleAuthentication() {
+  ...,
+  this.autoLogout(10000)
+}
+
+92 - auth guard
+
+auth.guard.ts 
+
+@Injectable({providedIn: 'root'}) // or provides array
+export class AuthGuard implements CanActivate {
+  constructor (private authService: AuthService, private router: Router) {}
+
+  canActivate(route: ActivatedRouteSnapshot, router: RouterStateSnapshot):boolean | Promise<boolean> | Observable<boolean> | UrlTree {
+    return this.authService.user.pipe(
+      take(1),
+      map(user => {
+        const isAuth = !!user;
+        if (isAuth) {
+          return true;
+        }
+        return this.router.createUrlTree(['/auth'])
+      })
+    );
+  }
+}
+
+app-routing.module.ts
+{
+  path: 'recipes',
+  component: RecipesComponent,
+  canActivate: [AuthGuard]
+}
+
+93 - Dynamic components - programmatic creation
+alert.component.ts
+export class AlertComponent {
+  @Input() message: string;
+  @Output() close = new EventEmitter<void>();
+
+  conClose() {
+    this.close.emit()
+  }
+}
+
+placeholder.directive.ts - directive to get the element where action is called
+@Directive({
+  selector: '[appPlaceholder]'
+})
+export class PlaceholderDirective {
+  constructor(public viewContainerRef: ViewContainerRef) {}
+}
+
+auth.component.ts
+@ViewChild(PlaceholderDirective, {static: false}) alertHost: PlaceholderDirective;
+
+constructor(private componentFactoryResolver: ComponentFactoryResolver) {}
+this.showErrorAlert(error) {
+  const alertCmpFactory = this.componentFactoryResolver.resolveComponentFactory(AlertComponent);
+  const hostViewContainerRef = this.alertHost.viewContainerRef;
+  hostViewContainerRef.clear();
+  hostViewContainerRef.createComponent(alertCmpFactory);
+}
+
+authObs.subscribe(
+  resData=> {
+    this.isLoading = false;
+    this.router.navigate9['/recipes']);
+  },
+  errorMessage => {
+    this.showErrorAlert(errorMessage)
+  }
+)
+
+auth.component.html
+<ng-template appPlaceholder></ng-template>
+
+94 - dynamic component - data & event binding
+auth.component.ts
+
+private closeSub: Subscriptionl
+this.showErrorAlert(error) {
+  const alertCmpFactory = this.componentFactoryResolver.resolveComponentFactory(AlertComponent);
+  const hostViewContainerRef = this.alertHost.viewContainerRef;
+  hostViewContainerRef.clear();
+
+  const componentRef = hostViewContainerRef.createComponent(alertCmpFactory);
+  componentRef.instance.message = error;
+   this.closeSub = componentRef.instance.close.subscribe(() => {
+      this.closeSub.unsubscribe();
+      hostViewContainerRef.clear();
+  })
+}
+ngOnDestroy() {
+  if(this.closeSub) {
+    this.closeSub.unsubscribe();
+  }
+}
