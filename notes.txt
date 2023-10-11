@@ -1957,3 +1957,227 @@ ngOnDestroy() {
     this.closeSub.unsubscribe();
   }
 }
+
+
+95 - Angular modules
+It's good to split angular app into separate modules.
+AppModule, RoutingModule, RecipesModule, TasksModule etc.
+
+Import other modules in import array in AppModule
+Each module has to import modules that it's going to use on its own - like routing module or http module.
+Each feature module should have it's own routing module
+It's worth it to create shared-module - for dropdowns, buttons, directives etc
+
+AppModule:
+@NgModule({
+  declarations: [AppComponent, HeaderComponent],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule,
+    SharedModule,
+    CoreModule
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+
+CoreModule:
+@NgModule({
+  providers: [
+    ShoppingListService,
+    RecipeService,
+    {
+      provide: HTTP_INTERCEPTORS,
+      useClass: AuthInterceptorService,
+      multi: true
+    }
+  ]
+})
+export class CoreModule {}
+
+RecipesModule:
+@NgModule({
+  declarations: [
+    RecipesComponent,
+    RecipeListComponent,
+    RecipeDetailComponent,
+    RecipeItemComponent,
+    RecipeStartComponent,
+    RecipeEditComponent
+  ],
+  imports: [
+    RouterModule,
+    ReactiveFormsModule,
+    RecipesRoutingModule,
+    SharedModule
+  ]
+})
+export class RecipesModule {}
+
+AppRoutingModule
+const appRoutes: Routes = [
+  { path: "", redirectTo: "/recipes", pathMatch: "full" },
+  {
+    path: "recipes",
+    loadChildren: () =>
+      import("./recipes/recipes.module").then(m => m.RecipesModule)
+  },
+  {
+    path: "shopping-list",
+    loadChildren: () =>
+      import("./shopping-list/shopping-list.module").then(
+        m => m.ShoppingListModule
+      )
+  },
+  {
+    path: "auth",
+    loadChildren: () => import("./auth/auth.module").then(m => m.AuthModule)
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forRoot(appRoutes)],
+  exports: [RouterModule]
+})
+export class AppRoutingModule {}
+
+RecipesRoutingModule
+const routes: Routes = [
+  {
+    path: '',
+    component: RecipesComponent,
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', component: RecipeStartComponent },
+      { path: 'new', component: RecipeEditComponent },
+      {
+        path: ':id',
+        component: RecipeDetailComponent,
+        resolve: [RecipesResolverService]
+      },
+      {
+        path: ':id/edit',
+        component: RecipeEditComponent,
+        resolve: [RecipesResolverService]
+      }
+    ]
+  }
+];
+
+@NgModule({
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule]
+})
+export class RecipesRoutingModule {}
+
+
+96 - Lazy loading modules
+
+AppModule:
+@NgModule({
+  declarations: [AppComponent, HeaderComponent],
+  imports: [
+    BrowserModule,
+    HttpClientModule,
+    AppRoutingModule,
+    SharedModule,
+    CoreModule
+  ],
+  bootstrap: [AppComponent]
+})
+export class AppModule {}
+
+AppRoutingModule
+const appRoutes: Routes = [
+  { path: "", redirectTo: "/recipes", pathMatch: "full" },
+  {
+    path: "recipes",
+    loadChildren: () =>
+      import("./recipes/recipes.module").then(m => m.RecipesModule)
+  },
+];
+
+RecipesRoutingModule
+const routes: Routes = [
+  {
+    path: '',
+    component: RecipesComponent,
+    canActivate: [AuthGuard],
+    children: [
+      { path: '', component: RecipeStartComponent },
+      { path: 'new', component: RecipeEditComponent },
+      {
+        path: ':id',
+        component: RecipeDetailComponent,
+        resolve: [RecipesResolverService]
+      },
+      {
+        path: ':id/edit',
+        component: RecipeEditComponent,
+        resolve: [RecipesResolverService]
+      }
+    ]
+  }
+];
+
+97 - preoload ladzy modules
+
+AppRoutingModule
+@NgModule({
+  imports: [RouterModule.forRoot(appRoutes, { preloadingStrategy: PreloadAllModules })],
+  exports: [RouterModule]
+})
+
+This will preload other route modules after the initial load of page.
+
+98 - services in modules
+If service is provided in root then theres one instance for whole app
+if its only imported in specific module its only available there
+bugs if in shared.module
+Try to always make them available app-wide
+
+98 - Deployment - env variables
+src > environments
+
+export const environment = {
+  production: false,
+  apiKey: "keyvalue"
+}
+
+import {environment} from 'environments/environment'
+
+useage: environment.apiKey
+
+99. Angular Elements
+They allow us to create Web components - native js
+Can be used only in angular apps
+
+<div [innerHTML]="content"></div>
+
+conent = null
+constructor() {
+  setTimeout(() => {
+    this.content = "<app-alert message="text" />
+  })
+}
+
+Above won't work, because you can'y add angular logic to inner html after compilation.
+
+So to make this work install:
+
+@angular/elements,
+@webcomponents/custom-elements
+
+import createCustomElement from '@angular/elements'; 
+
+constructor(injector: Injector, domSanitizer: DomSanitizer) {
+  const AlertElement = createCustomElement(AlertComponent, {injector: injector}); // angular-elements
+  customElements.define('my-alert-element', AlertElement) // native js
+  setTimeout(() => {
+    this.content = domSanitizer.bypassSecurityTrustHtml("<my-alert-element message="text" />")
+  })
+}
+
+add the component from which you are making the angular element to entryComponents array in app.module - might not be neded anymore
+entryCOmponents: [AlertComponent]
