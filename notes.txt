@@ -2181,3 +2181,80 @@ constructor(injector: Injector, domSanitizer: DomSanitizer) {
 
 add the component from which you are making the angular element to entryComponents array in app.module - might not be neded anymore
 entryCOmponents: [AlertComponent]
+
+100 - Standalone components
+Allow us to not use ngModules
+Remove from declarations array in ngModule
+
+If we want to use a standalone component inside 'normal' component, we have to add it to imports array  in the ngModule
+If we want to use a standalone component inside another standalone components, we have to add it to imports array in the 'using' component 
+
+@Component({standalone: true, selector..., templateUrl..., styleUrls...})
+
+impprts [StadndaloneComponentExample]
+
+Standalone component also can have imports array, in which we can add for eg. sharedModule to import stuff that it needs
+
+Directives and Pipes can also be standalone
+
+@Component({standalone: true, imports: [StandaloneDirectiveExample], selector..., templateUrl..., styleUrls...})
+
+101 - Standalone root component
+We can aldo get rid of app.module and therefore get rid of ngModules in our app all together
+
+main.ts
+import bootstrapApplication fromm '@angular/platforn-browser'
+
+bootstrapApplication(AppComponent)
+
+102 - Providing services in providers array in root instead of adding 'providedIn: root' in the directive itself
+
+But that's not needed, probidedIn: root is better
+
+bootstrapApplication(AppComponent, {
+  providers: [SomethingService]
+})
+
+103 - Routing Standalone Components
+
+First - add RouterModule to imports array in app.component.ts
+
+bootstrapApplication(AppComponent, {
+  providers: [importProvidersFrom(AppRoutingModule)]
+})
+
+104 - Lazy Loading in StandaloneComponents
+With modules if we want to lazy-load a component, we have to make it a separate module and then use lazy-syntax, with StandaloneComponents we can use with every component without any modules.
+
+
+Routing file:
+
+{
+  path: 'about',
+  loadComponent:() => import ('./about/about.component').then((mod)=>mod.AboutComponent)
+}
+
+We can spearate routing of different parts of applications without creating a routing-module for it. 
+
+dashboard-routes.ts
+export const DASHBOARD_ROUTES: Route[] = [
+  {
+    path: '',
+    component: DashboardComponent
+  },
+  {
+    path: 'today',
+    component: TodayComponent
+  }
+]
+
+app-routing.module.ts
+
+{
+  path: 'dashboard',
+  loadComponent:() => import ('./dashboard/dashboard-routes').then((mod)=>mod.DASHBOARD_ROUTES)
+}
+
+(thats with lazy-loading)
+
+Each Standalone Component needs ti import RouterModule in imports array to use it's methods like routerLink
