@@ -2258,3 +2258,65 @@ app-routing.module.ts
 (thats with lazy-loading)
 
 Each Standalone Component needs ti import RouterModule in imports array to use it's methods like routerLink
+
+
+105 - Angular Signals
+They are used to replace the existing change detection in angular and do it manually - faster and smaller bundle size. As of v.16 this is only a dev-preview feature.
+
+import {signal} from '@angular/core'
+
+counter = 0 //old
+counter = signal(0) //new - using signal - wrapper that creates a signal from data
+
+106 - Change value of signal
+
+increment() {
+  this.counter++; // old
+}
+
+//1
+increment() {
+  this.counter.set(1); // set value of signal
+}
+
+//2
+increment() {
+  this.counter.update((oldCounter)=>{oldCounter + 1}); // update value of signal
+}
+
+//3 
+increment() {
+  this.counter.set(this.counter() + 1);
+}
+
+//4
+actions: = signal<string[]>([])
+increment() {
+  this.counter.mutate((oldActions)=> oldActions.push('increment'));
+}
+
+//5
+actions: = signal<string[]>([])
+increment() {
+  this.counter.update((oldActions)=>{[...oldActions, 'increment']});
+}
+
+<li *ngFor="let action of actions()"">{{action}}</li>
+
+
+107 - Read signal value
+//old
+<div>{{counter}}</div>
+
+//new
+<div>{{counter()}}</div>
+
+308 - Computed Signals
+
+doubleCounter = computed(()=>{this.counter() * 2}) //value based on signals - will be updated when signal changes
+
+309 - effect signal - run code when any signal in the effect function changes
+
+constructor() {
+  effect(()=>{console.log(this.counter()})
+}
