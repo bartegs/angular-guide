@@ -2320,3 +2320,266 @@ doubleCounter = computed(()=>{this.counter() * 2}) //value based on signals - wi
 constructor() {
   effect(()=>{console.log(this.counter()})
 }
+
+309 - ngRx
+export interface Product {
+  name: string;
+  price: number;
+}
+
+Reducer
+// product.reducer.ts
+import { Product } from './../product/product.model';
+import { Action } from '@ngrx/store';
+export const ADD_PRODUCT = 'ADD_PRODUCT';
+export function addProductReducer(state: Product[] = [], action) {
+  switch (action.type) {
+    case ADD_PRODUCT:
+        return [...state, action.payload];
+    default:
+        return state;
+    }
+}
+
+Store config
+// app.module.ts
+import { StoreModule } from '@ngrx/store';
+import { addProductReducer } from './reducers/product.reducer';
+ imports: [
+    BrowserModule,
+    StoreModule.forRoot({product: addProductReducer})
+],
+
+
+// src/app/product/product.component.ts
+import { Product } from './product.model';
+import { AppState } from './../app.state';
+import { Component, OnInit } from '@angular/core';
+import { Store } from '@ngrx/store';
+@Component({
+  selector: 'app-product',
+  templateUrl: './product.component.html',
+  styleUrls: ['./product.component.css']
+})
+export class ProductComponent implements OnInit {
+  products: Observable<Product[]>;
+  constructor(private store: Store<AppState>) {
+    this.products = this.store.select(state => state.product);
+   }
+  addProduct(name, price) {
+    this.store.dispatch({
+      type: 'ADD_PRODUCT',
+      payload: <Product> {
+        name: name,
+        price: price
+      }
+    });
+  }
+  ngOnInit() {
+  }
+}
+
+
+// src/app/app.state.ts
+import { Product } from './product/product.model';
+export interface AppState {
+  readonly product: Product[];
+}
+
+Dispatch action
+<div class="panel panel-primary">
+    <div class="panel-body">
+      <form>
+        <div class="form-group">
+          <label class="col-md-4">Product Name</label>
+          <input type="text" class="form-control" #productName/>
+        </div>
+        <div class="form-group">
+          <label class="col-md-4">Product Price</label>
+          <input type="text" class="form-control" #productPrice />
+          </div>
+          <div class="form-group">
+            <button (click) = "addProduct(productName.value, productPrice.value)" class="btn btn-primary">Add Product</button>
+          </div>
+      </form>
+    </div>
+  </div>
+<table class="table table-hover" *ngIf="products != 0">
+  <thead>
+  <tr>
+      <td>Product Name</td>
+      <td>Product Price</td>
+  </tr>
+  </thead>
+  <tbody>
+      <tr *ngFor="let product of products | async">
+          <td></td>
+          <td></td>
+      </tr>
+  </tbody>
+  </table>
+
+
+310 - Angular universal - server side rendering
+
+first page is preloaded, rest is spa as usual
+
+311 - Convert angular app to universal app
+ng add @nguniversal/express-engine
+
+312 - full stack app in angular universal
+we can build backend logic using express, like an rest api.
+Make sure routes don't collide with fe routes - add api prefix for example
+
+server.ts
+
+server.get('/api/**'. (req, res) => {});
+server.post('/api/**'. (req, res) => {});
+
+313 - deploy angular universal app
+nodejs hosting providers
+
+hosting that allows executing server code
+
+1. build:ssr
+2. npm i
+3. serve:ssr
+
+deplot: dist folder + package.json + angular.json
+
+312 - ssr important informations
++ improves seo
++ improves performance
+- you cant use browser-only APIs like document.querySelector() because they don't exist on the server
+
+313 - Angular animations
+
+npm install --save @angular/animations
+Add the BrowserAnimationsModule  to your imports[]  array in AppModule
+
+Animate something that's added to the dom using angular methods (ngif) and not css (display)
+
+314 - setup animations:
+in animations you transition between states
+
+trigger 1 param - what to target
+trigger 2 param - animation to toggle
+
+<div [@divState]="state">testowy div</div>
+
+@Component({
+  animations : [
+    trigger('divState', [
+      state('normal', style({
+        'background-color': 'black';
+      })),
+      state('highlighted',  style({
+        'background-color': 'red;
+      })),
+    ])
+  ]
+  selector: 'app-server',
+  templateUrl: './server.component.html',
+  styleUrls: ['./server.component.scss']
+})
+
+state: 'normal' | 'highlighted'  = 'normal';
+
+315 - animate transition
+onAnimate() {
+  this.state === 'normal' ? this.state = 'highlighted' :  this.state = 'normal';
+}
+
+  animations : [
+    trigger('divState', [
+      state('normal', style({
+        'background-color': 'black';
+      })),
+      state('highlighted',  style({
+        'background-color': 'red;
+      })),
+      transition('normal' => 'highlighted', animate(300)),
+      transition('highlighted' => 'normal', animate(300))
+    ])
+  ]
+
+declare transition from state 1 to 2, how long it takes
+
+316 - transition from any state to specific state
+  transition('highlighted' <=> *, animate(500))
+
+317 - transition phases
+we can define styles during the animation - transition period
+      transition('highlighted' <=> *, 
+        style({bacgkroundColor: 'orange'}),               // starting phase
+        animate(1000, style({borderRadius: '50px'}),      // apply style over certain time
+        animate(500)                                      // without style, so transition to the end state
+])
+
+318 - void state
+animate non existing state
+
+  animations : [
+    trigger('list1', [
+      state('in', style({
+        opacity: 1
+      })),
+      transition('void' => *, [
+        style({
+          opacity: 0,
+          transform: 'translateX(-100px)'  
+        }),
+        animate(300),
+      ]),
+      transition(* => void, [
+        animate(300, style({
+          transform: 'translateX(100px)',
+          opacity: 0
+        })),
+      ])
+    ])
+  ]
+
+319 - using keyframes for animations
+ trigger('list1', [
+      state('in', style({
+        opacity: 1
+      })),
+      transition('void' => *, [
+        animate(1000, keyframes([
+          style({
+            transform: 'translateX(-100px)',
+            opacity: 0,
+            offset: 0
+          }),
+          style({
+            transform: 'translateX(-50px)',
+            opacity: 0,
+            offset: 0.3
+          }),
+          style({
+            transform: 'translateX(0px)',
+            opacity: 0,
+            offset: 0.9
+          }),
+          style({
+            transform: 'translateX(0px)',
+            opacity: 0,
+            offset: 1
+          })
+        ])),
+      ]),
+    ])
+
+320 - grouping transitions - perform transition animations synchronously
+     
+transition('highlighted' <=> *, [
+  group([
+    animate(1000, style({color: 'red'}),    
+    animate(500,  style({transform: 'translateX(100px)', opacity: 0})    
+  ]),                                      
+]
+
+321 - animiation callbacks - execute method when animation starts/ends
+
+<div [@divState]="state" (@divState.start)="animationStarted() (@divState.done)="animationEnded($event)">testowy div</div>
