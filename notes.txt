@@ -2583,3 +2583,27 @@ transition('highlighted' <=> *, [
 321 - animiation callbacks - execute method when animation starts/ends
 
 <div [@divState]="state" (@divState.start)="animationStarted() (@divState.done)="animationEnded($event)">testowy div</div>
+
+322 - Service worker
+sits between app and http call - gives offline capabilities
+
+ng add @angular/pwa
+
+service worker keeps running when network is offline, can display page without dynamic data
+
+ngsw-config.json
+
+urls: "font url" - dodanie fonta do offline service workera
+cacheConfig - ustawienia cache'owania
+
+"dataGroups" :{
+name: posts,
+urls: ulr,
+cacheConfig: {
+  maxSize: 5,
+  mxAge: '6t'
+  imeout: '10s',
+strategy: freshness | performacnce
+}
+}
+
