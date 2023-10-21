@@ -2681,3 +2681,29 @@ describe('Pipe: ReversePipe', () => {
 });
 
 Test that doesnt need angular features
+
+228 Angular CLI
+
+ng --help 
+after every ng command we can use --help to view all options
+
+ng generate --help: class, component, directive, enum, guard, interceptor, inteface, library, module, pipe, service, serviceWorker, 
+
+ng g class --help
+
+ng add @angular/material - add to app, does more than just install, also dependencies and configurations
+
+custom schematic - can be created on your own
+ng generate @angular/material:nav main-nav
+
+ng update - smarter packages update
+
+Differential loading using browserList, tsconfig and angular.json angular is capable of creating multiple bundle files (newer js = smaller size) and the end user gets the file which is fitting for his browser. Built in.
+
+create angular app, which consists of a couple apps inside one folder
+
+ng new angular-shop --create-application=false
+and then use ng generate application to create apps inside projects folder - rest is shared
+
+we can also create libraries
+ng generate library
